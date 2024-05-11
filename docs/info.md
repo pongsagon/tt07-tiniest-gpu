@@ -9,11 +9,12 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+A tiniest GPU that can render only 1 tetahedron
 
 ## How to test
 
-Explain how to use your project
+Plugin a TinyVGA PMOD, connect at the port uio.
+Send UART command to control the GPU via serial console
 
 ## External hardware
 
