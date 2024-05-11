@@ -17,4 +17,7 @@ Explain how to use your project
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+1. TinyVGA PMOD, connect at the port uio
+2. serial console UART to USB at the port
+   ui_in[3] - RX
+   uo_out[4] - TX
