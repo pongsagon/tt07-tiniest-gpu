@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-`timescale 1ns / 1ps
 `default_nettype none
 
 module tt_um_pongsagon_tiniest_gpu (
@@ -22,38 +21,54 @@ module tt_um_pongsagon_tiniest_gpu (
 	wire [1:0] B;
 	wire hsync;
 	wire vsync;
+	wire reset = !rst_n;
 	
 	wire [9:0] x, y;
 	wire blank;
 	
-	vga v(.clk (clk), .HS (hsync), .VS (vsync), .x (x), .y (y), .blank (blank));
+	wire rx = ui_in[3];
+	wire [7:0] read_data;
+	wire read_done;
+	
+	
+	vga v(.clk (clk),.reset(reset), .HS (hsync), .VS (vsync), .x (x), .y (y), .blank (blank));
+	uart_top UART_UNIT
+        (
+            .clk(clk),
+            .reset(reset),
+            .rx(rx),
+            .rx_data_out(read_data),
+            .rx_done_tick(read_done)
+        );
 
-	reg [9:0] o_x = 320;								// store obj properties, 
-	reg [9:0] o_y = 240;
-	wire object = x>o_x & x<o_x+30 & y>o_y & y<o_y+30;	// define obj shape
+	reg [9:0] o_x, o_y;								// store obj properties, 
+	wire object = x>o_x & x<o_x+100 & y>o_y & y<o_y+100;	// define obj shape
 	wire border = (x>0 & x<10) | (x>630 & x<640) | (y>0 & y<10) | (y>470 & y<480);
 	
 	assign R = (border & ~ blank)? 2'b11:0;
 	assign G = ((border | object) & ~ blank)? 2'b11:0;
 	assign B = (border & ~ blank)? 2'b11:0;
 	
-	reg [17:0] prescaler;	// to slow down input
-	
 	always @(posedge clk) begin			// changing properties each clk
-		prescaler <= prescaler + 1;
-		if (prescaler == 0) begin
-			// if (up_switch) begin		// will loop back to 0, warp left/right
-				// o_y <= o_y - 1;
-			// end
-			// if (dn_switch) begin
-				// o_y <= o_y + 1;
-			// end
-			// if (left_switch) begin
-				// o_x <= o_x - 1;
-			// end
-			// if (right_switch) begin
-				// o_x <= o_x + 1;
-			// end
+		if (reset) begin
+			o_x <= 320;
+			o_y <= 240;
+		end 
+		else begin
+			if (read_done) begin
+				if (read_data == 119) begin		// will loop back to 0, warp left/right
+					o_y <= o_y - 4;
+				end
+				if (read_data == 115) begin
+					o_y <= o_y + 4;
+				end
+				if (read_data == 97) begin
+					o_x <= o_x - 4;
+				end
+				if (read_data == 100) begin
+					o_x <= o_x + 4;
+				end
+			end
 		end
 	end
 
