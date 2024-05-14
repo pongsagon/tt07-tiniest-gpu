@@ -20,6 +20,8 @@ project:
     - "baud_rate_generator.v"
     - "uart_receiver.v"
     - "uart_top.v"
+    - "div.v"
+    - "slowmpy.v"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:
