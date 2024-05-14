@@ -106,3 +106,4 @@ module uart_receiver
     assign data_out = data_reg;
 
 endmodule
+

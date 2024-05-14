@@ -109,6 +109,23 @@ module tt_um_pongsagon_tiniest_gpu (
 	    		end
 	    	endcase
 
+	    	// div
+			case (state_div)
+	    		0: begin			
+	    			start <= 1;
+	    			state_div <= 1;
+	    		end
+	    		1: begin	
+	    			start <= 0;
+	    			// if (done) begin
+	    			// 	c <= val;
+	    			// end		
+	    		end
+	    		default: begin
+	    			state_div <= 0;
+	    		end
+	    	endcase
+
 	    	// vga
 			if (read_done) begin
 				if (read_data == 119) begin		// will loop back to 0, warp left/right
@@ -144,7 +161,7 @@ module tt_um_pongsagon_tiniest_gpu (
 	//assign uio_oe[7:0] = 8'b1111_1111;
 	//assign uo_out[7:0] = 0;
 
-	assign uio_oe[7:0] = 8'b1111_1111;
+	assign uio_oe[7:0] = (done)? val[17:10]: 0;
 	assign uo_out[7:0] = (o_done)? ab[17:10]: 0;
 	
 
