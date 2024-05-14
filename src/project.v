@@ -21,7 +21,7 @@ module tt_um_pongsagon_tiniest_gpu (
 	wire [1:0] B;
 	wire hsync;
 	wire vsync;
-	wire reset = rst_n;
+	wire reset = !rst_n;
 	
 	wire [9:0] x, y;
 	wire blank;
@@ -63,6 +63,8 @@ module tt_um_pongsagon_tiniest_gpu (
     div #(.WIDTH(32),.FBITS(16)) div1 (.clk (clk), .rst(reset),.start(start),.busy(busy),.done(done)
     								,.valid(valid),.dbz(dbz),.ovf(ovf),.a(a32),.b(b32),.val(val));
     
+    reg [1:0] state_mul;
+    reg [1:0] state_div;
 
 
 	reg [9:0] o_x, o_y;								// store obj properties, 
@@ -75,16 +77,39 @@ module tt_um_pongsagon_tiniest_gpu (
 	
 	always @(posedge clk) begin			// changing properties each clk
 		if (reset) begin
-			o_x <= 320;
-			o_y <= 240;
+			//mul
+			state_mul <= 0;
+			state_div <= 0;
 			a <= 16'b1110_1100_0001_0100;
 			b <= 16'b1111_1110_0000_1100;
+			// vga
+			o_x <= 320;
+			o_y <= 240;
+			// div
 			i_stb <= 0;
 			start <= 0;
 			a32 <= 32'b0000_0000_1000_0000_0000_0000_0000_0000;  //  128
 	    	b32 <= 32'b0000_0000_0000_1111_0000_0000_0000_0000;  //  15
 		end 
 		else begin
+			// mul
+			case (state_mul)
+	    		0: begin			
+	    			i_stb <= 1;
+	    			state_mul <= 1;
+	    		end
+	    		1: begin	
+	    			i_stb <= 0;
+	    			//if (o_done) begin
+	    			//	c <= ab[23:8];	// ready in 19clk for 16bit mul
+	    			//end		
+	    		end
+	    		default: begin
+	    			state_mul <= 0;
+	    		end
+	    	endcase
+
+	    	// vga
 			if (read_done) begin
 				if (read_data == 119) begin		// will loop back to 0, warp left/right
 					o_y <= o_y - 4;
@@ -116,8 +141,11 @@ module tt_um_pongsagon_tiniest_gpu (
     assign uio_out[6] = B[0];
     assign uio_out[7] = hsync;
 	
+	//assign uio_oe[7:0] = 8'b1111_1111;
+	//assign uo_out[7:0] = 0;
+
 	assign uio_oe[7:0] = 8'b1111_1111;
-	assign uo_out[7:0] = 0;
+	assign uo_out[7:0] = (o_done)? ab[17:10]: 0;
 	
 
 
