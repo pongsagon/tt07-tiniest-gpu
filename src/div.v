@@ -48,7 +48,14 @@ module div #(
     end
 
     // calculation state machine
-    enum {IDLE, INIT, CALC, ROUND, SIGN} state;
+    reg [2:0] state;
+    localparam IDLE = 0;
+    localparam INIT = 1;
+    localparam CALC = 2;
+    localparam ROUND = 3;
+    localparam SIGN = 4;
+    // enum cant syn to ASIC
+    //enum {IDLE, INIT, CALC, ROUND, SIGN} state; 
     always @(posedge clk) begin
         done <= 0;
         case (state)
