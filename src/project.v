@@ -21,7 +21,7 @@ module tt_um_pongsagon_tiniest_gpu (
 	wire [1:0] B;
 	wire hsync;
 	wire vsync;
-	wire reset = !rst_n;
+	wire reset = rst_n;
 	
 	wire [9:0] x, y;
 	wire blank;
@@ -41,6 +41,30 @@ module tt_um_pongsagon_tiniest_gpu (
             .rx_done_tick(read_done)
         );
 
+    // test include div.v, slowmpy.v to see area usage
+    reg signed [15:0] a;  // -19.9218 = -5100/256
+	reg signed [15:0] b;  // -1.9531 = -500/256
+    wire signed [31:0] ab;  // large enough for product
+    reg i_stb;
+    wire o_busy;
+    wire o_done;
+    wire o_aux;
+    slowmpy mul (.i_clk (clk), .i_reset(reset), .i_stb(i_stb),.i_a(a),.i_b(b)
+    			,.i_aux(0),.o_busy(o_busy),.o_done(o_done),.o_p(ab),.o_aux(o_aux));
+    reg start;
+	wire busy;
+	wire done;
+	wire valid;
+	wire dbz;
+	wire ovf;
+	reg signed [31:0] a32;  
+	reg signed [31:0] b32;  
+	wire signed [31:0] val;		
+    div #(.WIDTH(32),.FBITS(16)) div1 (.clk (clk), .rst(reset),.start(start),.busy(busy),.done(done)
+    								,.valid(valid),.dbz(dbz),.ovf(ovf),.a(a32),.b(b32),.val(val));
+    
+
+
 	reg [9:0] o_x, o_y;								// store obj properties, 
 	wire object = x>o_x & x<o_x+100 & y>o_y & y<o_y+100;	// define obj shape
 	wire border = (x>0 & x<10) | (x>630 & x<640) | (y>0 & y<10) | (y>470 & y<480);
@@ -53,6 +77,12 @@ module tt_um_pongsagon_tiniest_gpu (
 		if (reset) begin
 			o_x <= 320;
 			o_y <= 240;
+			a = 16'b1110_1100_0001_0100;
+			b = 16'b1111_1110_0000_1100;
+			i_stb <= 0;
+			start <= 0;
+			a32 <= 32'b0000_0000_1000_0000_0000_0000_0000_0000;  //  128
+	    	b32 <= 32'b0000_0000_0000_1111_0000_0000_0000_0000;  //  15
 		end 
 		else begin
 			if (read_done) begin
