@@ -96,7 +96,6 @@ module	slowmpy #(
 			aux    <= 0;
 			o_done <= 0;
 			o_busy <= 0;
-			almost_done <= 0;
 		end 
 		else if (!o_busy) begin
 			o_done <= 0;
