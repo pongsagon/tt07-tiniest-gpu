@@ -50,7 +50,7 @@ module tt_um_pongsagon_tiniest_gpu (
     wire o_done;
     wire o_aux;
     slowmpy mul (.i_clk (clk), .i_reset(reset), .i_stb(i_stb),.i_a(a),.i_b(b)
-    			,.i_aux(0),.o_busy(o_busy),.o_done(o_done),.o_p(ab),.o_aux(o_aux));
+    			,.i_aux(1'b0),.o_busy(o_busy),.o_done(o_done),.o_p(ab),.o_aux(o_aux));
     reg start;
 	wire busy;
 	wire done;
