@@ -1,4 +1,6 @@
-
+// Project F Library - Division: Signed Fixed-Point with Gaussian Rounding
+// (C)2023 Will Green, Open source hardware released under the MIT License
+// Learn more at https://projectf.io/verilog-lib/
 
 module div #(
     parameter WIDTH=32,  // width of numbers in bits (integer and fractional)
