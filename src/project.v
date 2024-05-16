@@ -13,15 +13,7 @@ module tt_um_pongsagon_tiniest_gpu (
     output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
     input  wire       ena,      // always 1 when the design is powered, so you can ignore it
     input  wire       clk,      // clock
-    input  wire       rst_n,    // reset_n - low to reset
-    // 
-    output reg [9:0] sdl_sx,  // horizontal SDL position
-    output reg [9:0] sdl_sy,  // vertical SDL position
-    output reg sdl_de,              // data enable (low in blanking interval)
-    output reg [7:0] sdl_r,         // 8-bit red
-    output reg [7:0] sdl_g,         // 8-bit green
-    output reg [7:0] sdl_b          // 8-bit blue
-
+    input  wire       rst_n    // reset_n - low to reset
 );
 
 	wire reset = !rst_n;
@@ -90,15 +82,6 @@ module tt_um_pongsagon_tiniest_gpu (
 	assign uo_out[7:0] = 0;
 
 
-	// 
-	always @(posedge clk) begin
-        sdl_sx <= x;
-        sdl_sy <= y;
-        sdl_de <= ~blank;
-        sdl_r <= {4{RGB[1:0]}};
-        sdl_g <= {4{RGB[3:2]}};
-        sdl_b <= {4{RGB[5:4]}};
-    end
 
 
 endmodule
