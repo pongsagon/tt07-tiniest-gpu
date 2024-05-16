@@ -9,7 +9,7 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-A tiniest GPU that can render only 1 tetahedron
+A tiniest GPU that can render only 1 triangle
 
 ## How to test
 
@@ -21,4 +21,4 @@ Send UART command to control the GPU via serial console
 1. TinyVGA PMOD, connect at the port uio
 2. serial console UART to USB at the port
    ui_in[3] - RX
-   uo_out[4] - TX
+   
