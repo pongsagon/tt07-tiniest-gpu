@@ -50,8 +50,8 @@
 `default_nettype	none
 
 module	slowmpy #(
-		parameter				LGNA = 4,
-		parameter	[LGNA:0]	NA = 16,
+		parameter				LGNA = 5,
+		parameter	[LGNA:0]	NA = 20,
 		parameter	[0:0]		OPT_SIGNED = 1'b1,
 		parameter	[0:0]		OPT_LOWPOWER = 1'b0,
 		localparam	NB = NA // Must be = NA for OPT_SIGNED to work

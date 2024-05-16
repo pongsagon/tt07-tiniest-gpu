@@ -1,4 +1,4 @@
-
+//`timescale 1ns / 1ps
 
 // 640x480 @60Hz
 module vga(
@@ -7,9 +7,7 @@ module vga(
 	output HS, VS,
 	output [9:0] x,
 	output [9:0] y,
-	output blank,
-	output newframe, 	// x=0,y=1  true for one clk
-	output endframe     // x=0,y=480
+	output blank
 	);
 	
 	// Counter Registers, two each for buffering to avoid glitches
@@ -29,8 +27,8 @@ module vga(
 	assign y = yc;
 	assign HS = HS_reg;
 	assign VS = VS_reg;
-	assign newframe = ((xc == 0) && (yc == 1) && (prescaler == 0));
-	assign endframe = ((xc == 0) && (yc == 480) && (prescaler == 0));
+	//assign newframe = ((xc == 0) && (yc == 1) && (prescaler == 0));
+	//assign endframe = ((xc == 0) && (yc == 480) && (prescaler == 0));
 	
 	always @(posedge clk) begin
 		if (reset) begin
@@ -44,7 +42,7 @@ module vga(
 		end
 		else begin
 			prescaler <= prescaler + 1;
-			if (prescaler == 3) begin		// do every 25Mhz
+			if (prescaler == 1) begin		// do every 25Mhz
 				prescaler <= 0;	
 				if (xc == 799) begin
 					xc_next <= 0;
