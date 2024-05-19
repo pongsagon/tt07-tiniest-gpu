@@ -126,9 +126,8 @@ module vs(
     			,.done(dot_done),.result(dot_result));
     
 
-    //////////////////////////////
-	// compute [VP] -> div w -> [S], dot(light,n)
-	//////////////////////////////
+    
+    // for compute [VP] -> div w -> [S], dot(light,n)
 	reg [4:0] state_transform;		// 0-30 states
 	reg signed [15:0] tmp_ndc;
 
@@ -238,273 +237,8 @@ module vs(
 		endcase
 	end
 
-    always @(posedge clk) begin
-    	case (state_transform)
-			0: begin
-				// wait for pc_data_ready
-				if (pc_data_ready) begin
-					dot_start <= 1;
-					state_transform <= 1;
-				end
-			end
-			// clip = [VP] * world
-			1: begin
-				dot_start <= 0;
-				if (dot_done) begin
-					x_clip_v0 <= dot_result;
-					dot_start <= 1;
-					state_transform <= 2;
-				end
-			end 
-			2: begin
-				dot_start <= 0;
-				if (dot_done) begin
-					y_clip_v0 <= dot_result;
-					dot_start <= 1;
-					state_transform <= 3;
-				end
-			end 
-			3: begin
-				dot_start <= 0;
-				if (dot_done) begin
-					w_clip_v0 <= dot_result;
-					dot_start <= 1;
-					state_transform <= 4;
-				end
-			end 
-			4: begin
-				dot_start <= 0;
-				if (dot_done) begin
-					x_clip_v1 <= dot_result;
-					dot_start <= 1;
-					state_transform <= 5;
-				end
-			end 
-			5: begin
-				dot_start <= 0;
-				if (dot_done) begin
-					y_clip_v1 <= dot_result;
-					dot_start <= 1;
-					state_transform <= 6;
-				end
-			end 
-			6: begin
-				dot_start <= 0;
-				if (dot_done) begin
-					w_clip_v1 <= dot_result;
-					dot_start <= 1;
-					state_transform <= 7;
-				end
-			end 
-			7: begin
-				dot_start <= 0;
-				if (dot_done) begin
-					x_clip_v2 <= dot_result;
-					dot_start <= 1;
-					state_transform <= 8;
-				end
-			end 
-			8: begin
-				dot_start <= 0;
-				if (dot_done) begin
-					y_clip_v2 <= dot_result;
-					dot_start <= 1;
-					state_transform <= 9;
-				end
-			end 
-			9: begin
-				dot_start <= 0;
-				if (dot_done) begin
-					w_clip_v2 <= dot_result;
-					// ndc = clip.xy / clip.w
-					// 		Q8.8->Q16.16 -> Q16.16 = Q16.16/Q16.16 -> Q16.16->Q2.14
-					// 		signed extended[15:0] <= { {8{extend[7]}}, extend[7:0] };
-					div_a <= { {8{x_clip_v0[15]}}, x_clip_v0, 8'b0000_0000};
-					div_b <= { {8{w_clip_v0[15]}}, w_clip_v0, 8'b0000_0000};
-					div_start <= 1;
-					state_transform <= 10;
-				end
-			end 
-			// 
-			//
-			10: begin
-				div_start <= 0;
-				if (div_done) begin
-					x_ndc_v0 <= div_result[17:2];
-					div_a <= { {8{y_clip_v0[15]}}, y_clip_v0, 8'b0000_0000};
-					div_b <= { {8{w_clip_v0[15]}}, w_clip_v0, 8'b0000_0000};
-					div_start <= 1;
-					state_transform <= 11;
-				end
-			end
-			11: begin
-				div_start <= 0;
-				if (div_done) begin
-					y_ndc_v0 <= div_result[17:2];
-					div_a <= { {8{x_clip_v1[15]}}, x_clip_v1, 8'b0000_0000};
-					div_b <= { {8{w_clip_v1[15]}}, w_clip_v1, 8'b0000_0000};
-					div_start <= 1;
-					state_transform <= 12;
-				end
-			end
-			12: begin
-				div_start <= 0;
-				if (div_done) begin
-					x_ndc_v1 <= div_result[17:2];
-					div_a <= { {8{y_clip_v1[15]}}, y_clip_v1, 8'b0000_0000};
-					div_b <= { {8{w_clip_v1[15]}}, w_clip_v1, 8'b0000_0000};
-					div_start <= 1;
-					state_transform <= 13;
-				end
-			end
-			13: begin
-				div_start <= 0;
-				if (div_done) begin
-					y_ndc_v1 <= div_result[17:2];
-					div_a <= { {8{x_clip_v2[15]}}, x_clip_v2, 8'b0000_0000};
-					div_b <= { {8{w_clip_v2[15]}}, w_clip_v2, 8'b0000_0000};
-					div_start <= 1;
-					state_transform <= 14;
-				end
-			end
-			14: begin
-				div_start <= 0;
-				if (div_done) begin
-					x_ndc_v2 <= div_result[17:2];
-					div_a <= { {8{y_clip_v2[15]}}, y_clip_v2, 8'b0000_0000};
-					div_b <= { {8{w_clip_v2[15]}}, w_clip_v2, 8'b0000_0000};
-					div_start <= 1;
-					state_transform <= 15;
-				end
-			end
-			15: begin
-				div_start <= 0;
-				if (div_done) begin
-					y_ndc_v2 <= div_result[17:2];
-					// screen = [S] * ndc
-					// 		x_ndc * 320 + 320 = x_ndc << 8 + x_ndc << 6 + 320
-					x_ndc_v0 <= {x_ndc_v0[15],x_ndc_v0[15:1]};		// Q2.14 (x_ndc) -> Q10.6 (x_ndc << 8) -> Q11.5
-					tmp_ndc <= { {3{x_ndc_v0[15]}}, x_ndc_v0[15:3]};	// Q2.14 (x_ndc) -> Q8.8 (x_ndc << 6) -> Q11.5
-					state_transform <= 16;
-				end
-			end
-			//
-			//
- 			16: begin
-				x_ndc_v0 <= x_ndc_v0 + tmp_ndc;
-				//
-				x_ndc_v1 <= {x_ndc_v1[15],x_ndc_v1[15:1]};		
-				tmp_ndc <= { {3{x_ndc_v1[15]}}, x_ndc_v1[15:3]};
-				state_transform <= 17;
-			end
-			17: begin  
-				x_ndc_v0 <= x_ndc_v0 + 16'sb001_0100_0000_00000;		// Q11.5 (320)
-				//
-				x_ndc_v1 <= x_ndc_v1 + tmp_ndc;
-				//
-				x_ndc_v2 <= {x_ndc_v2[15],x_ndc_v2[15:1]};		
-				tmp_ndc <= { {3{x_ndc_v2[15]}}, x_ndc_v2[15:3]};
-				state_transform <= 18;
-			end
-			18: begin
-				x_ndc_v1 <= x_ndc_v1 + 16'sb001_0100_0000_00000;		
-				//
-				x_ndc_v2 <= x_ndc_v2 + tmp_ndc;
-				// y_ndc * 240 + 240 = y_ndc << 8 - y_ndcc << 4 + 240
-				y_ndc_v0 <= {y_ndc_v0[15],y_ndc_v0[15:1]};		// Q2.14 (y_ndc) -> Q10.6 (y_ndc << 8) -> Q11.5
-				tmp_ndc <= { {5{y_ndc_v0[15]}}, y_ndc_v0[15:5]};	// Q2.14 (y_ndc) -> Q6.10 (y_ndc << 4) -> Q11.5
-				state_transform <= 19;
-			end
-			19: begin  
-				x_ndc_v2 <= x_ndc_v2 + 16'sb001_0100_0000_00000;
-				//
-				y_ndc_v0 <= y_ndc_v0 - tmp_ndc;
-				//
-				y_ndc_v1 <= {y_ndc_v1[15],y_ndc_v1[15:1]};		
-				tmp_ndc <= { {5{y_ndc_v1[15]}}, y_ndc_v1[15:5]};
-				state_transform <= 20;
-			end
-			20: begin
-				y_ndc_v0 <= y_ndc_v0 + 16'sb000_1111_0000_00000;		// Q11.5 (240)
-				//
-				y_ndc_v1 <= y_ndc_v1 - tmp_ndc;
-				//
-				y_ndc_v2 <= {y_ndc_v2[15],y_ndc_v2[15:1]};		
-				tmp_ndc <= { {5{y_ndc_v2[15]}}, y_ndc_v2[15:5]};
-				state_transform <= 21;
-			end
-			21: begin
-				y_ndc_v1 <= y_ndc_v1 + 16'sb000_1111_0000_00000;		
-				//
-				y_ndc_v2 <= y_ndc_v2 - tmp_ndc;
-				state_transform <= 22;
-			end
-			22: begin
-				y_ndc_v2 <= y_ndc_v2 + 16'sb000_1111_0000_00000;		
-				//
-				state_transform <= 23;
-			end
-			23: begin
-				if (buff1_ready) begin
-					x_screen_v0_buff2 <= {9'b0000_0000_0,x_ndc_v0[15:5]};		// Q20.0 (screen), always positive 
-					y_screen_v0_buff2 <= {9'b0000_0000_0,y_ndc_v0[15:5]};
-					x_screen_v1_buff2 <= {9'b0000_0000_0,x_ndc_v1[15:5]};
-					y_screen_v1_buff2 <= {9'b0000_0000_0,y_ndc_v1[15:5]};
-					x_screen_v2_buff2 <= {9'b0000_0000_0,x_ndc_v2[15:5]};
-					y_screen_v2_buff2 <= {9'b0000_0000_0,y_ndc_v2[15:5]};
-					buff1_ready <= 0;
-				end
-				else begin
-					x_screen_v0_buff1 <= {9'b0000_0000_0,x_ndc_v0[15:5]};		// Q20.0 (screen), always positive 
-					y_screen_v0_buff1 <= {9'b0000_0000_0,y_ndc_v0[15:5]};
-					x_screen_v1_buff1 <= {9'b0000_0000_0,x_ndc_v1[15:5]};
-					y_screen_v1_buff1 <= {9'b0000_0000_0,y_ndc_v1[15:5]};
-					x_screen_v2_buff1 <= {9'b0000_0000_0,x_ndc_v2[15:5]};
-					y_screen_v2_buff1 <= {9'b0000_0000_0,y_ndc_v2[15:5]};
-					buff1_ready <= 1;
-				end
-				state_transform <= 30;
-			end 
 
-			// dot(light, n)
-
-			30: begin
-				state_transform <= 0;
-			end 
-			default: begin
-				state_transform <= 0;
-			end
-		endcase
-    end
-
-
-
-    // double buffer xy_screen
-    always @(posedge clk) begin
-    	if ((y == 480) && (x == 0)) begin
-    		if (buff1_ready) begin
-    			x_screen_v0 <= x_screen_v0_buff1;
-				y_screen_v0 <= y_screen_v0_buff1;
-				x_screen_v1 <= x_screen_v1_buff1;
-				y_screen_v1 <= y_screen_v1_buff1;
-				x_screen_v2 <= x_screen_v2_buff1;
-				y_screen_v2 <= y_screen_v2_buff1;
-    		end
-    		else begin
-    			x_screen_v0 <= x_screen_v0_buff2;
-				y_screen_v0 <= y_screen_v0_buff2;
-				x_screen_v1 <= x_screen_v1_buff2;
-				y_screen_v1 <= y_screen_v1_buff2;
-				x_screen_v2 <= x_screen_v2_buff2;
-				y_screen_v2 <= y_screen_v2_buff2;
-    		end
-    	end
-    end
-
-
-    //////////////////////////////
-	// compute e0_init
-	//////////////////////////////
+    // for compute ei_int
     reg [1:0] state_ei_line;
     reg [3:0] state_ei_frame;
     reg signed [19:0] tmp_ei_mul1;
@@ -568,6 +302,271 @@ module vs(
 		end
 		else begin
 
+			//////////////////////////////
+			// compute [VP] -> div w -> [S], dot(light,n)
+			//////////////////////////////
+			case (state_transform)
+				0: begin
+					// wait for pc_data_ready
+					if (pc_data_ready) begin
+						dot_start <= 1;
+						state_transform <= 1;
+					end
+				end
+				// clip = [VP] * world
+				1: begin
+					dot_start <= 0;
+					if (dot_done) begin
+						x_clip_v0 <= dot_result;
+						dot_start <= 1;
+						state_transform <= 2;
+					end
+				end 
+				2: begin
+					dot_start <= 0;
+					if (dot_done) begin
+						y_clip_v0 <= dot_result;
+						dot_start <= 1;
+						state_transform <= 3;
+					end
+				end 
+				3: begin
+					dot_start <= 0;
+					if (dot_done) begin
+						w_clip_v0 <= dot_result;
+						dot_start <= 1;
+						state_transform <= 4;
+					end
+				end 
+				4: begin
+					dot_start <= 0;
+					if (dot_done) begin
+						x_clip_v1 <= dot_result;
+						dot_start <= 1;
+						state_transform <= 5;
+					end
+				end 
+				5: begin
+					dot_start <= 0;
+					if (dot_done) begin
+						y_clip_v1 <= dot_result;
+						dot_start <= 1;
+						state_transform <= 6;
+					end
+				end 
+				6: begin
+					dot_start <= 0;
+					if (dot_done) begin
+						w_clip_v1 <= dot_result;
+						dot_start <= 1;
+						state_transform <= 7;
+					end
+				end 
+				7: begin
+					dot_start <= 0;
+					if (dot_done) begin
+						x_clip_v2 <= dot_result;
+						dot_start <= 1;
+						state_transform <= 8;
+					end
+				end 
+				8: begin
+					dot_start <= 0;
+					if (dot_done) begin
+						y_clip_v2 <= dot_result;
+						dot_start <= 1;
+						state_transform <= 9;
+					end
+				end 
+				9: begin
+					dot_start <= 0;
+					if (dot_done) begin
+						w_clip_v2 <= dot_result;
+						// ndc = clip.xy / clip.w
+						// 		Q8.8->Q16.16 -> Q16.16 = Q16.16/Q16.16 -> Q16.16->Q2.14
+						// 		signed extended[15:0] <= { {8{extend[7]}}, extend[7:0] };
+						div_a <= { {8{x_clip_v0[15]}}, x_clip_v0, 8'b0000_0000};
+						div_b <= { {8{w_clip_v0[15]}}, w_clip_v0, 8'b0000_0000};
+						div_start <= 1;
+						state_transform <= 10;
+					end
+				end 
+				// 
+				//
+				10: begin
+					div_start <= 0;
+					if (div_done) begin
+						x_ndc_v0 <= div_result[17:2];
+						div_a <= { {8{y_clip_v0[15]}}, y_clip_v0, 8'b0000_0000};
+						div_b <= { {8{w_clip_v0[15]}}, w_clip_v0, 8'b0000_0000};
+						div_start <= 1;
+						state_transform <= 11;
+					end
+				end
+				11: begin
+					div_start <= 0;
+					if (div_done) begin
+						y_ndc_v0 <= div_result[17:2];
+						div_a <= { {8{x_clip_v1[15]}}, x_clip_v1, 8'b0000_0000};
+						div_b <= { {8{w_clip_v1[15]}}, w_clip_v1, 8'b0000_0000};
+						div_start <= 1;
+						state_transform <= 12;
+					end
+				end
+				12: begin
+					div_start <= 0;
+					if (div_done) begin
+						x_ndc_v1 <= div_result[17:2];
+						div_a <= { {8{y_clip_v1[15]}}, y_clip_v1, 8'b0000_0000};
+						div_b <= { {8{w_clip_v1[15]}}, w_clip_v1, 8'b0000_0000};
+						div_start <= 1;
+						state_transform <= 13;
+					end
+				end
+				13: begin
+					div_start <= 0;
+					if (div_done) begin
+						y_ndc_v1 <= div_result[17:2];
+						div_a <= { {8{x_clip_v2[15]}}, x_clip_v2, 8'b0000_0000};
+						div_b <= { {8{w_clip_v2[15]}}, w_clip_v2, 8'b0000_0000};
+						div_start <= 1;
+						state_transform <= 14;
+					end
+				end
+				14: begin
+					div_start <= 0;
+					if (div_done) begin
+						x_ndc_v2 <= div_result[17:2];
+						div_a <= { {8{y_clip_v2[15]}}, y_clip_v2, 8'b0000_0000};
+						div_b <= { {8{w_clip_v2[15]}}, w_clip_v2, 8'b0000_0000};
+						div_start <= 1;
+						state_transform <= 15;
+					end
+				end
+				15: begin
+					div_start <= 0;
+					if (div_done) begin
+						y_ndc_v2 <= div_result[17:2];
+						// screen = [S] * ndc
+						// 		x_ndc * 320 + 320 = x_ndc << 8 + x_ndc << 6 + 320
+						x_ndc_v0 <= {x_ndc_v0[15],x_ndc_v0[15:1]};		// Q2.14 (x_ndc) -> Q10.6 (x_ndc << 8) -> Q11.5
+						tmp_ndc <= { {3{x_ndc_v0[15]}}, x_ndc_v0[15:3]};	// Q2.14 (x_ndc) -> Q8.8 (x_ndc << 6) -> Q11.5
+						state_transform <= 16;
+					end
+				end
+				//
+				//
+	 			16: begin
+					x_ndc_v0 <= x_ndc_v0 + tmp_ndc;
+					//
+					x_ndc_v1 <= {x_ndc_v1[15],x_ndc_v1[15:1]};		
+					tmp_ndc <= { {3{x_ndc_v1[15]}}, x_ndc_v1[15:3]};
+					state_transform <= 17;
+				end
+				17: begin  
+					x_ndc_v0 <= x_ndc_v0 + 16'sb001_0100_0000_00000;		// Q11.5 (320)
+					//
+					x_ndc_v1 <= x_ndc_v1 + tmp_ndc;
+					//
+					x_ndc_v2 <= {x_ndc_v2[15],x_ndc_v2[15:1]};		
+					tmp_ndc <= { {3{x_ndc_v2[15]}}, x_ndc_v2[15:3]};
+					state_transform <= 18;
+				end
+				18: begin
+					x_ndc_v1 <= x_ndc_v1 + 16'sb001_0100_0000_00000;		
+					//
+					x_ndc_v2 <= x_ndc_v2 + tmp_ndc;
+					// y_ndc * 240 + 240 = y_ndc << 8 - y_ndcc << 4 + 240
+					y_ndc_v0 <= {y_ndc_v0[15],y_ndc_v0[15:1]};		// Q2.14 (y_ndc) -> Q10.6 (y_ndc << 8) -> Q11.5
+					tmp_ndc <= { {5{y_ndc_v0[15]}}, y_ndc_v0[15:5]};	// Q2.14 (y_ndc) -> Q6.10 (y_ndc << 4) -> Q11.5
+					state_transform <= 19;
+				end
+				19: begin  
+					x_ndc_v2 <= x_ndc_v2 + 16'sb001_0100_0000_00000;
+					//
+					y_ndc_v0 <= y_ndc_v0 - tmp_ndc;
+					//
+					y_ndc_v1 <= {y_ndc_v1[15],y_ndc_v1[15:1]};		
+					tmp_ndc <= { {5{y_ndc_v1[15]}}, y_ndc_v1[15:5]};
+					state_transform <= 20;
+				end
+				20: begin
+					y_ndc_v0 <= y_ndc_v0 + 16'sb000_1111_0000_00000;		// Q11.5 (240)
+					//
+					y_ndc_v1 <= y_ndc_v1 - tmp_ndc;
+					//
+					y_ndc_v2 <= {y_ndc_v2[15],y_ndc_v2[15:1]};		
+					tmp_ndc <= { {5{y_ndc_v2[15]}}, y_ndc_v2[15:5]};
+					state_transform <= 21;
+				end
+				21: begin
+					y_ndc_v1 <= y_ndc_v1 + 16'sb000_1111_0000_00000;		
+					//
+					y_ndc_v2 <= y_ndc_v2 - tmp_ndc;
+					state_transform <= 22;
+				end
+				22: begin
+					y_ndc_v2 <= y_ndc_v2 + 16'sb000_1111_0000_00000;		
+					//
+					state_transform <= 23;
+				end
+				23: begin
+					if (buff1_ready) begin
+						x_screen_v0_buff2 <= {9'b0000_0000_0,x_ndc_v0[15:5]};		// Q20.0 (screen), always positive 
+						y_screen_v0_buff2 <= {9'b0000_0000_0,y_ndc_v0[15:5]};
+						x_screen_v1_buff2 <= {9'b0000_0000_0,x_ndc_v1[15:5]};
+						y_screen_v1_buff2 <= {9'b0000_0000_0,y_ndc_v1[15:5]};
+						x_screen_v2_buff2 <= {9'b0000_0000_0,x_ndc_v2[15:5]};
+						y_screen_v2_buff2 <= {9'b0000_0000_0,y_ndc_v2[15:5]};
+						buff1_ready <= 0;
+					end
+					else begin
+						x_screen_v0_buff1 <= {9'b0000_0000_0,x_ndc_v0[15:5]};		// Q20.0 (screen), always positive 
+						y_screen_v0_buff1 <= {9'b0000_0000_0,y_ndc_v0[15:5]};
+						x_screen_v1_buff1 <= {9'b0000_0000_0,x_ndc_v1[15:5]};
+						y_screen_v1_buff1 <= {9'b0000_0000_0,y_ndc_v1[15:5]};
+						x_screen_v2_buff1 <= {9'b0000_0000_0,x_ndc_v2[15:5]};
+						y_screen_v2_buff1 <= {9'b0000_0000_0,y_ndc_v2[15:5]};
+						buff1_ready <= 1;
+					end
+					state_transform <= 30;
+				end 
+
+				// dot(light, n)
+
+				30: begin
+					state_transform <= 0;
+				end 
+				default: begin
+					state_transform <= 0;
+				end
+			endcase
+
+			//////////////////////////////
+			// double buffer xy_screen
+			//////////////////////////////
+			if ((y == 480) && (x == 0)) begin
+	    		if (buff1_ready) begin
+	    			x_screen_v0 <= x_screen_v0_buff1;
+					y_screen_v0 <= y_screen_v0_buff1;
+					x_screen_v1 <= x_screen_v1_buff1;
+					y_screen_v1 <= y_screen_v1_buff1;
+					x_screen_v2 <= x_screen_v2_buff1;
+					y_screen_v2 <= y_screen_v2_buff1;
+	    		end
+	    		else begin
+	    			x_screen_v0 <= x_screen_v0_buff2;
+					y_screen_v0 <= y_screen_v0_buff2;
+					x_screen_v1 <= x_screen_v1_buff2;
+					y_screen_v1 <= y_screen_v1_buff2;
+					x_screen_v2 <= x_screen_v2_buff2;
+					y_screen_v2 <= y_screen_v2_buff2;
+	    		end
+	    	end
+
+			//////////////////////////////
+			// compute e0_init
+			//////////////////////////////
 			if (y < 480) begin
 				if (x == 640) begin
 					// @ endline, compute e0_init -= x2x1; 
@@ -667,7 +666,6 @@ module vs(
 					end
 				endcase
 			end
-
 
 
 		end // reset

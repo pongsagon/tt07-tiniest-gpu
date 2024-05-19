@@ -92,8 +92,13 @@ module tt_um_pongsagon_tiniest_gpu (
 	wire update_reg;		
 	wire pc_ready;
 	wire [5:0] idx;		// 0-54
-	//uart_top UART_UNIT(.clk(clk),.reset(reset),.rx(rx),.rx_data_out(read_data),.rx_done_tick(read_done));
+	uart_top UART_UNIT(.clk(clk),.reset(reset),.rx(rx),.rx_data_out(read_data),.rx_done_tick(read_done));
 	// ia ia1( clk, reset, read_data,      idx, update_reg, pc_ready);
+
+	// tmp code, assign something to wire has no driver warning
+	assign update_reg = read_done;
+	assign pc_ready = read_done;
+	assign idx = 6'b11_1111;
 
 
 	// update internal reg from IA
