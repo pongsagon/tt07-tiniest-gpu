@@ -15,6 +15,10 @@
 // - Many of the variable names have been changed for clarity
 //////////////////////////////////////////////////////////////////////////////////
 
+
+//`timescale 1ns / 1ps
+
+
 module uart_receiver
     #(
         parameter   DBITS = 8,          // number of data bits in a data word

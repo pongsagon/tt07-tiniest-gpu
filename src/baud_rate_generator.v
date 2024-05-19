@@ -28,6 +28,9 @@
 // log2(27) = 5     				(counter bits N)
 //////////////////////////////////////////////////////////////////////////////////
 
+//`timescale 1ns / 1ps
+
+
 module baud_rate_generator
     #(              // 115,200 baud, clk = 100Mhz
         parameter   N = 6,     // number of counter bits

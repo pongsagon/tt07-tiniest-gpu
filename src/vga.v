@@ -1,4 +1,5 @@
 //`timescale 1ns / 1ps
+//`default_nettype wire
 
 // 640x480 @60Hz
 module vga(
@@ -42,7 +43,7 @@ module vga(
 		end
 		else begin
 			prescaler <= prescaler + 1;
-			if (prescaler == 1) begin		// do every 25Mhz
+			if (prescaler == 1) begin		// do every 25Mhz, 
 				prescaler <= 0;	
 				if (xc == 799) begin
 					xc_next <= 0;

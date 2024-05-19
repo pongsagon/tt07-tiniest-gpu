@@ -1,6 +1,5 @@
 //`timescale 1ns / 1ps
 
-// raster 1 triangle
 
 module raster(
 	input clk, 		
@@ -19,7 +18,7 @@ module raster(
 	input signed [19:0] e0_init_t1,			// change per line, int20
 	input signed [19:0] e1_init_t1,
 	input signed [19:0] e2_init_t1,
-	//
+	// to top
 	output reg [5:0] rgb
 	);
 

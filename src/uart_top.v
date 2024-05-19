@@ -13,6 +13,8 @@
 // Comments:
 // - Many of the variable names have been changed for clarity
 //////////////////////////////////////////////////////////////////////////////////
+//`timescale 1ns / 1ps
+
 
 module uart_top
     #(
