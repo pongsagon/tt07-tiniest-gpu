@@ -13,42 +13,42 @@ module tt_um_pongsagon_tiniest_gpu (
     output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
     input  wire       ena,      // always 1 when the design is powered, so you can ignore it
     input  wire       clk,      // clock
-    input  wire       rst_n,    // reset_n - low to reset
+    input  wire       rst_n    // reset_n - low to reset
     // verilator
-    input SIM_pc_data_ready,						
-	input signed [15:0] SIM_x_world_v0,			
-	input signed [15:0] SIM_y_world_v0,
-	input signed [15:0] SIM_z_world_v0,
-	input signed [15:0] SIM_x_world_v1,
-	input signed [15:0] SIM_y_world_v1,
-	input signed [15:0] SIM_z_world_v1,
-	input signed [15:0] SIM_x_world_v2,
-	input signed [15:0] SIM_y_world_v2,
-	input signed [15:0] SIM_z_world_v2,
-	input signed [15:0] SIM_nx,					
-	input signed [15:0] SIM_ny,
-	input signed [15:0] SIM_nz,
-	input signed [15:0] SIM_light_x,			
-	input signed [15:0] SIM_light_y,
-	input signed [15:0] SIM_light_z,
-	input signed [15:0] SIM_vp_00,				
-	input signed [15:0] SIM_vp_01,
-	input signed [15:0] SIM_vp_02,
-	input signed [15:0] SIM_vp_03,
-	input signed [15:0] SIM_vp_10,				
-	input signed [15:0] SIM_vp_11,
-	input signed [15:0] SIM_vp_12,
-	input signed [15:0] SIM_vp_13,
-	input signed [15:0] SIM_vp_30,				
-	input signed [15:0] SIM_vp_31,
-	input signed [15:0] SIM_vp_32,
-	input signed [15:0] SIM_vp_33,
-	output reg [9:0] SIM_sx,  
-    output reg [9:0] SIM_sy,  
-    output reg SIM_de,              
-    output reg [7:0] SIM_r,         
-    output reg [7:0] SIM_g,        
-    output reg [7:0] SIM_b          
+    // input SIM_pc_data_ready,						
+	// input signed [15:0] SIM_x_world_v0,			
+	// input signed [15:0] SIM_y_world_v0,
+	// input signed [15:0] SIM_z_world_v0,
+	// input signed [15:0] SIM_x_world_v1,
+	// input signed [15:0] SIM_y_world_v1,
+	// input signed [15:0] SIM_z_world_v1,
+	// input signed [15:0] SIM_x_world_v2,
+	// input signed [15:0] SIM_y_world_v2,
+	// input signed [15:0] SIM_z_world_v2,
+	// input signed [15:0] SIM_nx,					
+	// input signed [15:0] SIM_ny,
+	// input signed [15:0] SIM_nz,
+	// input signed [15:0] SIM_light_x,			
+	// input signed [15:0] SIM_light_y,
+	// input signed [15:0] SIM_light_z,
+	// input signed [15:0] SIM_vp_00,				
+	// input signed [15:0] SIM_vp_01,
+	// input signed [15:0] SIM_vp_02,
+	// input signed [15:0] SIM_vp_03,
+	// input signed [15:0] SIM_vp_10,				
+	// input signed [15:0] SIM_vp_11,
+	// input signed [15:0] SIM_vp_12,
+	// input signed [15:0] SIM_vp_13,
+	// input signed [15:0] SIM_vp_30,				
+	// input signed [15:0] SIM_vp_31,
+	// input signed [15:0] SIM_vp_32,
+	// input signed [15:0] SIM_vp_33,
+	// output reg [9:0] SIM_sx,  
+    // output reg [9:0] SIM_sy,  
+    // output reg SIM_de,              
+    // output reg [7:0] SIM_r,         
+    // output reg [7:0] SIM_g,        
+    // output reg [7:0] SIM_b          
 );
 
 	wire reset = !rst_n;
@@ -363,42 +363,42 @@ module tt_um_pongsagon_tiniest_gpu (
 	// verilator
 	//////////////////////////////
 
-	always @(posedge clk) begin
-		pc_data_ready <= SIM_pc_data_ready;				
-		x_world_v0 <= SIM_x_world_v0;	
-		y_world_v0 <= SIM_y_world_v0;
-		z_world_v0 <= SIM_z_world_v0;
-		x_world_v1 <= SIM_x_world_v1;
-		y_world_v1 <= SIM_y_world_v1;
-		z_world_v1 <= SIM_z_world_v1;
-		x_world_v2 <= SIM_x_world_v2;
-		y_world_v2 <= SIM_y_world_v2;
-		z_world_v2 <= SIM_z_world_v2;
-		nx <= SIM_nx;					
-		ny <= SIM_ny;
-		nz <= SIM_nz;
-		light_x <= SIM_light_x;			
-		light_y <= SIM_light_y;
-		light_z <= SIM_light_z;
-		vp_00 <= SIM_vp_00;				
-		vp_01 <= SIM_vp_01;
-		vp_02 <= SIM_vp_02;
-		vp_03 <= SIM_vp_03;
-		vp_10 <= SIM_vp_10;				
-		vp_11 <= SIM_vp_11;
-		vp_12 <= SIM_vp_12;
-		vp_13 <= SIM_vp_13;
-		vp_30 <= SIM_vp_30;				
-		vp_31 <= SIM_vp_31;
-		vp_32 <= SIM_vp_32;
-		vp_33 <= SIM_vp_33;
-		SIM_sx <= x;
-        SIM_sy <= y;
-        SIM_de <= ~blank;
-        SIM_r <= {4{RGB[1:0]}};
-        SIM_g <= {4{RGB[3:2]}};
-        SIM_b <= {4{RGB[5:4]}};
-	end
+	// always @(posedge clk) begin
+	// 	pc_data_ready <= SIM_pc_data_ready;				
+	// 	x_world_v0 <= SIM_x_world_v0;	
+	// 	y_world_v0 <= SIM_y_world_v0;
+	// 	z_world_v0 <= SIM_z_world_v0;
+	// 	x_world_v1 <= SIM_x_world_v1;
+	// 	y_world_v1 <= SIM_y_world_v1;
+	// 	z_world_v1 <= SIM_z_world_v1;
+	// 	x_world_v2 <= SIM_x_world_v2;
+	// 	y_world_v2 <= SIM_y_world_v2;
+	// 	z_world_v2 <= SIM_z_world_v2;
+	// 	nx <= SIM_nx;					
+	// 	ny <= SIM_ny;
+	// 	nz <= SIM_nz;
+	// 	light_x <= SIM_light_x;			
+	// 	light_y <= SIM_light_y;
+	// 	light_z <= SIM_light_z;
+	// 	vp_00 <= SIM_vp_00;				
+	// 	vp_01 <= SIM_vp_01;
+	// 	vp_02 <= SIM_vp_02;
+	// 	vp_03 <= SIM_vp_03;
+	// 	vp_10 <= SIM_vp_10;				
+	// 	vp_11 <= SIM_vp_11;
+	// 	vp_12 <= SIM_vp_12;
+	// 	vp_13 <= SIM_vp_13;
+	// 	vp_30 <= SIM_vp_30;				
+	// 	vp_31 <= SIM_vp_31;
+	// 	vp_32 <= SIM_vp_32;
+	// 	vp_33 <= SIM_vp_33;
+	// 	SIM_sx <= x;
+    //     SIM_sy <= y;
+    //     SIM_de <= ~blank;
+    //     SIM_r <= {4{RGB[1:0]}};
+    //     SIM_g <= {4{RGB[3:2]}};
+    //     SIM_b <= {4{RGB[5:4]}};
+	// end
 
 
 	//////////////////////////////
