@@ -37,12 +37,9 @@ module vs(
 	input signed [15:0] vp_32,
 	input signed [15:0] vp_33,
 	// to raster
-	//output reg [1:0] tri_color,				// 2-bit intensity for each tri			
-	output reg signed [19:0] x_screen_v0,				// change per frame, int20
-	output reg signed [19:0] y_screen_v0,
-	output reg signed [19:0] x_screen_v1,		
-	output reg signed [19:0] y_screen_v1,
-	output reg signed [19:0] x_screen_v2,		
+	//output reg [1:0] tri_color,				// 2-bit intensity for each tri							
+	output reg signed [19:0] y_screen_v0,		// change per frame, int20		
+	output reg signed [19:0] y_screen_v1,	
 	output reg signed [19:0] y_screen_v2,
 	output reg signed [19:0] e0_init_t1,		// change per line, int20
 	output reg signed [19:0] e1_init_t1,
@@ -78,6 +75,9 @@ module vs(
 	reg signed [19:0] y_screen_v1_buff2;
 	reg signed [19:0] x_screen_v2_buff2;		
 	reg signed [19:0] y_screen_v2_buff2;
+	reg signed [19:0] x_screen_v0;
+	reg signed [19:0] x_screen_v1;
+	reg signed [19:0] x_screen_v2;
 	reg buff1_ready;
 
 
@@ -86,26 +86,18 @@ module vs(
 	reg signed [31:0] div_b;  
 	wire signed [31:0] div_result;
     reg div_start;
-	wire div_busy;
 	wire div_done;
-	wire div_valid;
-	wire div_dbz;
-	wire div_ovf;
-    div div1 (.clk (clk), .rst(reset),.start(div_start),.busy(div_busy)
-    			,.done(div_done),.valid(div_valid),.dbz(div_dbz),.ovf(div_ovf)
-    			,.a(div_a),.b(div_b),.val(div_result));
+    div div1 (.clk (clk), .rst(reset),.start(div_start),.done(div_done)
+    		  ,.a(div_a),.b(div_b),.val(div_result));
 
 	// mul 20-bit used to compute ei_init
 	reg signed [19:0] mul_a;  
 	reg signed [19:0] mul_b;  
     wire signed [39:0] mul_result;  
     reg mul_start;
-    wire mul_busy;
     wire mul_done;
-    wire mul_aux;
     slowmpy mul (.i_clk (clk), .i_reset(reset), .i_stb(mul_start),.i_a(mul_a)
-    			,.i_b(mul_b),.i_aux(1'b0),.o_busy(mul_busy),.o_done(mul_done)
-    			,.o_p(mul_result),.o_aux(mul_aux));
+    			,.i_b(mul_b),.i_aux(1'b0),.o_done(mul_done),.o_p(mul_result));
 
     reg dot_start;
     wire dot_done;

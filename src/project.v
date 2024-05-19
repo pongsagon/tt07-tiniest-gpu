@@ -309,11 +309,8 @@ module tt_um_pongsagon_tiniest_gpu (
 
 	
 	wire [5:0] rgb;
-	wire signed [19:0] x_screen_v0;
-	wire signed [19:0] y_screen_v0;
-	wire signed [19:0] x_screen_v1;		
-	wire signed [19:0] y_screen_v1;
-	wire signed [19:0] x_screen_v2;		
+	wire signed [19:0] y_screen_v0;		
+	wire signed [19:0] y_screen_v1;	
 	wire signed [19:0] y_screen_v2;
 	wire signed [19:0] e0_init_t1;
 	wire signed [19:0] e1_init_t1;
@@ -328,13 +325,11 @@ module tt_um_pongsagon_tiniest_gpu (
 					.vp_00(vp_00),.vp_01(vp_01),.vp_02(vp_02),.vp_03(vp_03),
 					.vp_10(vp_10),.vp_11(vp_11),.vp_12(vp_12),.vp_13(vp_13),
 					.vp_30(vp_30),.vp_31(vp_31),.vp_32(vp_32),.vp_33(vp_33),
-					.x_screen_v0(x_screen_v0),.y_screen_v0(y_screen_v0),.x_screen_v1(x_screen_v1),
-					.y_screen_v1(y_screen_v1),.x_screen_v2(x_screen_v2),.y_screen_v2(y_screen_v2),
+					.y_screen_v0(y_screen_v0),.y_screen_v1(y_screen_v1),.y_screen_v2(y_screen_v2),
 					.e0_init_t1(e0_init_t1),.e1_init_t1(e1_init_t1),.e2_init_t1(e2_init_t1));
 
 	raster raster1(.clk(clk),.reset(reset),.x(x),.y(y),
-					.x_screen_v0(x_screen_v0),.y_screen_v0(y_screen_v0),.x_screen_v1(x_screen_v1),
-					.y_screen_v1(y_screen_v1),.x_screen_v2(x_screen_v2),.y_screen_v2(y_screen_v2),
+					.y_screen_v0(y_screen_v0),.y_screen_v1(y_screen_v1),.y_screen_v2(y_screen_v2),
 					.e0_init_t1(e0_init_t1),.e1_init_t1(e1_init_t1),.e2_init_t1(e2_init_t1),.rgb(rgb));
 
 	wire hsync;

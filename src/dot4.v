@@ -27,12 +27,9 @@ module dot4(
 	reg signed [15:0] mul_b;  
     wire signed [31:0] mul_result;  
     reg mul_start;
-    wire mul_busy;
     wire mul_done;
-    wire mul_aux;
     slowmpy #(.LGNA(4),.NA(16)) mul2 (.i_clk (clk), .i_reset(reset), .i_stb(mul_start),.i_a(mul_a)
-    			,.i_b(mul_b),.i_aux(1'b0),.o_busy(mul_busy),.o_done(mul_done)
-    			,.o_p(mul_result),.o_aux(mul_aux));
+    			,.i_b(mul_b),.i_aux(1'b0),.o_done(mul_done),.o_p(mul_result));
 
 
     reg [2:0] state;		// 5 states

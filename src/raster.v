@@ -8,12 +8,9 @@ module raster(
 	input [9:0] x,
 	input [9:0] y,
 	// from VS, 
-	//input [1:0] tri_color,				// 2-bit intensity for each tri			
-	input signed [19:0] x_screen_v0,		// change per frame, int20
-	input signed [19:0] y_screen_v0,
-	input signed [19:0] x_screen_v1,		
-	input signed [19:0] y_screen_v1,
-	input signed [19:0] x_screen_v2,		
+	//input [1:0] tri_color,				// 2-bit intensity for each tri				
+	input signed [19:0] y_screen_v0,		// change per frame, int20		
+	input signed [19:0] y_screen_v1,		
 	input signed [19:0] y_screen_v2,
 	input signed [19:0] e0_init_t1,			// change per line, int20
 	input signed [19:0] e1_init_t1,
