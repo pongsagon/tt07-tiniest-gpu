@@ -330,17 +330,17 @@ module tt_um_pongsagon_tiniest_gpu (
 	//! commment this block in ASIC, verilator
 	//////////////////////////////
 	
-	// reg[27:0] counter=28'd0;
-	// parameter DIVISOR = 28'd2;
-	// reg clk;
-	// always @(posedge clk100)
-	// begin
-	// 	counter <= counter + 28'd1;
-	// 	if(counter>=(DIVISOR-1))
-	// 		counter <= 28'd0;
+	 // reg[27:0] counter=28'd0;
+	 // parameter DIVISOR = 28'd2;
+	 // reg clk;
+	 // always @(posedge clk100)
+	 // begin
+	 	// counter <= counter + 28'd1;
+	 	// if(counter>=(DIVISOR-1))
+	 		// counter <= 28'd0;
 
-	// 	clk <= (counter<DIVISOR/2)?1'b1:1'b0;
-	// end
+	 	// clk <= (counter<DIVISOR/2)?1'b1:1'b0;
+	 // end
 
 
 endmodule
