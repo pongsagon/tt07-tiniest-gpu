@@ -252,9 +252,9 @@ module vs(
 				v1_z = 0;
 				v1_w = 0;
 				v2_x = 0;
-				v2_x = 0;
-				v2_x = 0;
-				v2_x = 0;
+				v2_y = 0;
+				v2_z = 0;
+				v2_w = 0;
 			end
 		endcase
 	end
