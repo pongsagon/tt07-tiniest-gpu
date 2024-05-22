@@ -55,10 +55,9 @@ module tt_um_pongsagon_tiniest_gpu (
 
 	wire rx = ui_in[3];
 	wire [7:0] read_data;
-	wire read_done;
 	wire update_reg;		
 	wire pc_ready;
-	wire [5:0] idx;		// 0-54
+	wire [5:0] idx;		// 0-53
 
 	ia ia1(.clk(clk),.reset(reset),.rx(rx),.read_data(read_data),
 			.idx(idx),.update_reg(update_reg),.pc_ready(pc_ready));
@@ -249,16 +248,16 @@ module tt_um_pongsagon_tiniest_gpu (
 					49: begin
 						vp_31[15:8] <= read_data;		
 					end
-					51: begin
+					50: begin
 						vp_32[7:0] <= read_data;		
 					end
-					52: begin
+					51: begin
 						vp_32[15:8] <= read_data;		
 					end
-					53: begin
+					52: begin
 						vp_33[7:0] <= read_data;		
 					end
-					54: begin
+					53: begin
 						vp_33[15:8] <= read_data;		
 					end
 					default: begin

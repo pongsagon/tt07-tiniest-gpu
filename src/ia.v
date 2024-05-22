@@ -45,7 +45,7 @@ module ia(
 				end
 				1: begin
 					update_reg <= 0;
-					if (idx < 54) begin
+					if (idx < 53) begin
 						if (read_done) begin
 							read_data <= byte_data;
 							idx <= idx + 1;
