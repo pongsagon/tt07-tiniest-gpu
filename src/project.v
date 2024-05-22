@@ -48,7 +48,7 @@ module tt_um_pongsagon_tiniest_gpu (
     // output reg SIM_de,              
     // output reg [7:0] SIM_r,         
     // output reg [7:0] SIM_g,        
-    // output reg [7:0] SIM_b          
+    // output reg [7:0] SIM_b  
 );
 
 	wire reset = !rst_n;
@@ -304,13 +304,13 @@ module tt_um_pongsagon_tiniest_gpu (
 				endcase
 			end
 		end
-		
 		//! comment out for verilator
 		pc_data_ready <= pc_ready;
 	end
 
 	
 	wire [5:0] rgb;
+	wire [2:0] tri_color;
 	wire signed [19:0] y_screen_v0;		
 	wire signed [19:0] y_screen_v1;	
 	wire signed [19:0] y_screen_v2;
@@ -326,11 +326,11 @@ module tt_um_pongsagon_tiniest_gpu (
 					.light_x(light_x),.light_y(light_y),.light_z(light_z),
 					.vp_00(vp_00),.vp_01(vp_01),.vp_02(vp_02),.vp_03(vp_03),
 					.vp_10(vp_10),.vp_11(vp_11),.vp_12(vp_12),.vp_13(vp_13),
-					.vp_30(vp_30),.vp_31(vp_31),.vp_32(vp_32),.vp_33(vp_33),
+					.vp_30(vp_30),.vp_31(vp_31),.vp_32(vp_32),.vp_33(vp_33),.tri_color(tri_color),
 					.y_screen_v0(y_screen_v0),.y_screen_v1(y_screen_v1),.y_screen_v2(y_screen_v2),
 					.e0_init_t1(e0_init_t1),.e1_init_t1(e1_init_t1),.e2_init_t1(e2_init_t1));
 
-	raster raster1(.clk(clk),.reset(reset),.x(x),.y(y),
+	raster raster1(.clk(clk),.reset(reset),.x(x),.y(y),.tri_color(tri_color),
 					.y_screen_v0(y_screen_v0),.y_screen_v1(y_screen_v1),.y_screen_v2(y_screen_v2),
 					.e0_init_t1(e0_init_t1),.e1_init_t1(e1_init_t1),.e2_init_t1(e2_init_t1),.rgb(rgb));
 

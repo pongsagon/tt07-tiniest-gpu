@@ -1,13 +1,13 @@
 //`timescale 1ns / 1ps
 
-/*/
+/*
  * Copyright (c) 2024 Matt Pongsagon Vichitvejpaisal
  * SPDX-License-Identifier: Apache-2.0
  */
 
  // Transform coordinate
 
- // world, ndc: clockwise order, Y- point up
+ // world: clockwise order, Y- point up, Z+ into the screen
  // screen: Y+ point down
 
 module vs(
@@ -27,10 +27,10 @@ module vs(
 	input signed [15:0] x_world_v2,
 	input signed [15:0] y_world_v2,
 	input signed [15:0] z_world_v2,
-	input signed [15:0] nx,					// Q2.14
+	input signed [15:0] nx,					// Q8.8
 	input signed [15:0] ny,
 	input signed [15:0] nz,
-	input signed [15:0] light_x,			// Q2.14
+	input signed [15:0] light_x,			// Q8.8
 	input signed [15:0] light_y,
 	input signed [15:0] light_z,
 	input signed [15:0] vp_00,				// Q8.8
@@ -46,7 +46,7 @@ module vs(
 	input signed [15:0] vp_32,
 	input signed [15:0] vp_33,
 	// to raster
-	//output reg [1:0] tri_color,				// 2-bit intensity for each tri							
+	output reg [2:0] tri_color,				// 2-bit intensity for each tri							
 	output reg signed [19:0] y_screen_v0,		// change per frame, int20		
 	output reg signed [19:0] y_screen_v1,	
 	output reg signed [19:0] y_screen_v2,
@@ -88,6 +88,7 @@ module vs(
 	reg signed [19:0] x_screen_v1;
 	reg signed [19:0] x_screen_v2;
 	reg buff1_ready;
+	reg [2:0] tmp_color;
 
 
 
@@ -139,6 +140,7 @@ module vs(
     // for compute [VP] -> div w -> [S], dot(light,n)
 	reg [4:0] state_transform;		// 0-30 states
 	reg signed [15:0] tmp_ndc;
+
 
 	// for setting wire input to dot4 module
 	always @(*) begin
@@ -233,6 +235,17 @@ module vs(
 				v2_z = vp_32;
 				v2_w = vp_33;
 			end
+			// for dot(light,n)
+			24: begin
+				v1_x = nx;
+				v1_y = ny;
+				v1_z = nz;
+				v1_w = 16'sb0000_0000_0000_0000;
+				v2_x = light_x;
+				v2_y = light_y;
+				v2_z = light_z;
+				v2_w = 16'sb0000_0000_0000_0000;
+			end
 			default: begin
 				v1_x = 0;
 				v1_y = 0;
@@ -265,6 +278,7 @@ module vs(
 			// compute transform
 			state_transform <= 0;
 			tmp_ndc <= 0;
+			tmp_color <= 0;
 			// compute e0_init
 			state_ei_line <= 1;
 			state_ei_frame <= 0;
@@ -308,6 +322,7 @@ module vs(
 			e0_init_t1 <= 0;
 			e1_init_t1 <= 0;
 			e2_init_t1 <= 0;
+			tri_color <= 0;
 		end
 		else begin
 
@@ -538,11 +553,38 @@ module vs(
 						y_screen_v2_buff1 <= {9'b0000_0000_0,y_ndc_v2[15:5]};
 						buff1_ready <= 1;
 					end
-
-					state_transform <= 30;
+					// dot(light, n)
+					dot_start <= 1;
+					state_transform <= 24;
 				end 
+				// 
+				//
+				24: begin
+					dot_start <= 0;
+					if (dot_done) begin
+						if (dot_result[9] == 1'b1) begin  	   	  		// backfacing 1x.xxx
+							if (dot_result[8:6] == 3'b100) begin  		// 11.000 -> -1
+								tmp_color <= 3'b111;
+							end
+							else if (dot_result[9:8] == 2'b10) begin 	// 10.xxx -> -1.xxx
+								tmp_color <= 3'b111;
+							end
+							else begin
+								tmp_color <= ~dot_result[7:5];			// 11.xxx -> -0.xxx
+							end
+						end
+						else begin
+							if (dot_result[8:5] == 4'b1000) begin 		// 01.000 -> 0.111
+								tmp_color <= 3'b111;
+							end
+							else begin
+								tmp_color <= dot_result[7:5];			// 0.000 - 0.111
+							end
+						end
+						state_transform <= 30;
+					end
+				end
 
-				// dot(light, n)
 
 				30: begin
 					state_transform <= 0;
@@ -563,6 +605,7 @@ module vs(
 					y_screen_v1 <= y_screen_v1_buff1;
 					x_screen_v2 <= x_screen_v2_buff1;
 					y_screen_v2 <= y_screen_v2_buff1;
+					tri_color <= tmp_color;
 	    		end
 	    		else begin
 	    			x_screen_v0 <= x_screen_v0_buff2;
@@ -571,6 +614,7 @@ module vs(
 					y_screen_v1 <= y_screen_v1_buff2;
 					x_screen_v2 <= x_screen_v2_buff2;
 					y_screen_v2 <= y_screen_v2_buff2;
+					tri_color <= tmp_color;
 	    		end
 	    	end
 
