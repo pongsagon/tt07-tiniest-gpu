@@ -25,6 +25,7 @@ project:
     - "vs.v"
     - "raster.v"
     - "dot4.v"
+    - "ia.v"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:
