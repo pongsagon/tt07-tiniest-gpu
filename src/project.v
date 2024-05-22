@@ -12,43 +12,10 @@ module tt_um_pongsagon_tiniest_gpu (
     output wire [7:0] uio_out,  // IOs: Output path
     output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
     input  wire       ena,      // always 1 when the design is powered, so you can ignore it
-    input  wire       clk,      // clock
+    input  wire     clk,   	// clock
+    //! fgpa clk 100 Mhz
+    //input  wire       clk100,   // clock
     input  wire       rst_n    // reset_n - low to reset
-    //! verilator
-    // input SIM_pc_data_ready,						
-	// input signed [15:0] SIM_x_world_v0,			
-	// input signed [15:0] SIM_y_world_v0,
-	// input signed [15:0] SIM_z_world_v0,
-	// input signed [15:0] SIM_x_world_v1,
-	// input signed [15:0] SIM_y_world_v1,
-	// input signed [15:0] SIM_z_world_v1,
-	// input signed [15:0] SIM_x_world_v2,
-	// input signed [15:0] SIM_y_world_v2,
-	// input signed [15:0] SIM_z_world_v2,
-	// input signed [15:0] SIM_nx,					
-	// input signed [15:0] SIM_ny,
-	// input signed [15:0] SIM_nz,
-	// input signed [15:0] SIM_light_x,			
-	// input signed [15:0] SIM_light_y,
-	// input signed [15:0] SIM_light_z,
-	// input signed [15:0] SIM_vp_00,				
-	// input signed [15:0] SIM_vp_01,
-	// input signed [15:0] SIM_vp_02,
-	// input signed [15:0] SIM_vp_03,
-	// input signed [15:0] SIM_vp_10,				
-	// input signed [15:0] SIM_vp_11,
-	// input signed [15:0] SIM_vp_12,
-	// input signed [15:0] SIM_vp_13,
-	// input signed [15:0] SIM_vp_30,				
-	// input signed [15:0] SIM_vp_31,
-	// input signed [15:0] SIM_vp_32,
-	// input signed [15:0] SIM_vp_33,
-	// output reg [9:0] SIM_sx,  
-    // output reg [9:0] SIM_sy,  
-    // output reg SIM_de,              
-    // output reg [7:0] SIM_r,         
-    // output reg [7:0] SIM_g,        
-    // output reg [7:0] SIM_b  
 );
 
 	wire reset = !rst_n;
@@ -56,7 +23,7 @@ module tt_um_pongsagon_tiniest_gpu (
 
 
 	// internal reg, between IA, VS
-	reg pc_data_ready;					// true for 1 clk	 
+	reg pc_data_ready;						// true for 1 clk	 
 	reg signed [15:0] x_world_v0;			// Q8.8
 	reg signed [15:0] y_world_v0;
 	reg signed [15:0] z_world_v0;
@@ -66,10 +33,10 @@ module tt_um_pongsagon_tiniest_gpu (
 	reg signed [15:0] x_world_v2;
 	reg signed [15:0] y_world_v2;
 	reg signed [15:0] z_world_v2;
-	reg signed [15:0] nx;					// Q2.14
+	reg signed [15:0] nx;					// Q8.8
 	reg signed [15:0] ny;
 	reg signed [15:0] nz;
-	reg signed [15:0] light_x;			// Q2.14
+	reg signed [15:0] light_x;				// Q8.8
 	reg signed [15:0] light_y;
 	reg signed [15:0] light_z;
 	reg signed [15:0] vp_00;				// Q8.8
@@ -92,13 +59,9 @@ module tt_um_pongsagon_tiniest_gpu (
 	wire update_reg;		
 	wire pc_ready;
 	wire [5:0] idx;		// 0-54
-	uart_top UART_UNIT(.clk(clk),.reset(reset),.rx(rx),.rx_data_out(read_data),.rx_done_tick(read_done));
-	// ia ia1( clk, reset, read_data,      idx, update_reg, pc_ready);
 
-	//+ tmp code, assign something to wire has no driver warning
-	assign update_reg = 1'b0;
-	assign pc_ready = read_done;
-	assign idx = 6'b11_1111;
+	ia ia1(.clk(clk),.reset(reset),.rx(rx),.read_data(read_data),
+			.idx(idx),.update_reg(update_reg),.pc_ready(pc_ready));
 
 
 	// update internal reg from IA
@@ -304,7 +267,7 @@ module tt_um_pongsagon_tiniest_gpu (
 				endcase
 			end
 		end
-		//! comment out for verilator
+
 		pc_data_ready <= pc_ready;
 	end
 
@@ -361,64 +324,23 @@ module tt_um_pongsagon_tiniest_gpu (
 
 
 
-	//////////////////////////////
-	//! verilator
-	//////////////////////////////
-
-	// always @(posedge clk) begin
-	// 	pc_data_ready <= SIM_pc_data_ready;				
-	// 	x_world_v0 <= SIM_x_world_v0;	
-	// 	y_world_v0 <= SIM_y_world_v0;
-	// 	z_world_v0 <= SIM_z_world_v0;
-	// 	x_world_v1 <= SIM_x_world_v1;
-	// 	y_world_v1 <= SIM_y_world_v1;
-	// 	z_world_v1 <= SIM_z_world_v1;
-	// 	x_world_v2 <= SIM_x_world_v2;
-	// 	y_world_v2 <= SIM_y_world_v2;
-	// 	z_world_v2 <= SIM_z_world_v2;
-	// 	nx <= SIM_nx;					
-	// 	ny <= SIM_ny;
-	// 	nz <= SIM_nz;
-	// 	light_x <= SIM_light_x;			
-	// 	light_y <= SIM_light_y;
-	// 	light_z <= SIM_light_z;
-	// 	vp_00 <= SIM_vp_00;				
-	// 	vp_01 <= SIM_vp_01;
-	// 	vp_02 <= SIM_vp_02;
-	// 	vp_03 <= SIM_vp_03;
-	// 	vp_10 <= SIM_vp_10;				
-	// 	vp_11 <= SIM_vp_11;
-	// 	vp_12 <= SIM_vp_12;
-	// 	vp_13 <= SIM_vp_13;
-	// 	vp_30 <= SIM_vp_30;				
-	// 	vp_31 <= SIM_vp_31;
-	// 	vp_32 <= SIM_vp_32;
-	// 	vp_33 <= SIM_vp_33;
-	// 	SIM_sx <= x;
-    //     SIM_sy <= y;
-    //     SIM_de <= ~blank;
-    //     SIM_r <= {4{RGB[1:0]}};
-    //     SIM_g <= {4{RGB[3:2]}};
-    //     SIM_b <= {4{RGB[5:4]}};
-	// end
-
 
 	//////////////////////////////
 	// fpga code to reduce clk from 100Mhz to 50Mhz
 	//! commment this block in ASIC, verilator
 	//////////////////////////////
 	
-	/*reg[27:0] counter=28'd0;
-	parameter DIVISOR = 28'd2;
-	reg clk;
-	always @(posedge clk100)
-	begin
-		counter <= counter + 28'd1;
-		if(counter>=(DIVISOR-1))
-			counter <= 28'd0;
+	// reg[27:0] counter=28'd0;
+	// parameter DIVISOR = 28'd2;
+	// reg clk;
+	// always @(posedge clk100)
+	// begin
+	// 	counter <= counter + 28'd1;
+	// 	if(counter>=(DIVISOR-1))
+	// 		counter <= 28'd0;
 
-		clk <= (counter<DIVISOR/2)?1'b1:1'b0;
-	end*/
+	// 	clk <= (counter<DIVISOR/2)?1'b1:1'b0;
+	// end
 
 
 endmodule

@@ -7,7 +7,7 @@
 // Adapted for the Basys 3 Artix-7 FPGA by David J. Marion
 //
 //
-// Modify for the Tiny Tapeout ASIC by Pongsagon Vichitvejpaisal, 11 May 2024
+// Modify for the Tiny Tapeout ASIC by Pongsagon Vichitvejpaisal, 22 May 2024
 //
 // Baud Rate Generator for the UART System
 //
@@ -23,7 +23,8 @@
 // 115,200 * 16 = 1,843,200
 // 100 * 10^6 / 1,843,200 = ~54     (counter limit M)
 // log2(52) = 6     				(counter bits N)
-// For 50MHz
+//
+// For 115,200 baud with 50MHz ASIC clock:
 // 50 * 10^6 / 1,843,200 = ~27     (counter limit M)
 // log2(27) = 5     				(counter bits N)
 //////////////////////////////////////////////////////////////////////////////////
@@ -32,9 +33,9 @@
 
 
 module baud_rate_generator
-    #(              // 115,200 baud, clk = 100Mhz
-        parameter   N = 6,     // number of counter bits
-                    M = 54     // counter limit value
+    #(              // 115,200 baud, clk = 50Mhz
+        parameter   N = 5,     // number of counter bits
+                    M = 27     // counter limit value
     )
     (
         input clk,       		// clk

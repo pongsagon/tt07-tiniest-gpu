@@ -88,7 +88,8 @@ module uart_receiver
                     if(tick_reg == 15) begin
                         tick_next = 0;
                         data_next = {rx, data_reg[7:1]};
-                        if(nbits_reg == (DBITS-1))
+                        //if(nbits_reg == (DBITS-1))      
+                        if(nbits_reg == 7)   
                             next_state = stop;
                         else
                             nbits_next = nbits_reg + 1;
@@ -97,7 +98,8 @@ module uart_receiver
                         tick_next = tick_reg + 1;
             stop:
                 if(sample_tick)
-                    if(tick_reg == (SB_TICK-1)) begin
+                    //if(tick_reg == (SB_TICK-1)) begin
+                    if(tick_reg == 15) begin
                         next_state = idle;
                         data_ready = 1'b1;
                     end
