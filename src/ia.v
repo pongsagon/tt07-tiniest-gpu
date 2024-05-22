@@ -21,7 +21,7 @@ module ia(
 						.rx_data_out(byte_data),.rx_done_tick(read_done));
 
 
-	reg [5:0] state;
+	reg [1:0] state;
 
 	always @(posedge clk) begin
 		if (reset) begin
@@ -45,38 +45,20 @@ module ia(
 				end
 				1: begin
 					update_reg <= 0;
-					if (read_done) begin
-						read_data <= byte_data;
-						idx <= 1;
-						update_reg <= 1;
-						state <= 2;
+					if (idx < 54) begin
+						if (read_done) begin
+							read_data <= byte_data;
+							idx <= idx + 1;
+							update_reg <= 1;
+							state <= 1;
+						end
+					end
+					else begin
+						pc_ready <= 1;
+						state <= 0;
 					end
 				end
-				2: begin
-					update_reg <= 0;
-					if (read_done) begin
-						read_data <= byte_data;
-						idx <= 2;
-						update_reg <= 1;
-						state <= 54;
-					end
-				end
-
-				54: begin
-					update_reg <= 0;
-					if (read_done) begin
-						read_data <= byte_data;
-						idx <= 54;
-						update_reg <= 1;
-						state <= 55;
-					end
-				end
-				// wait for vp_33 to get read_data
-				55: begin
-					update_reg <= 0;
-					pc_ready <= 1;
-					state <= 0;
-				end
+				
 
 				default: begin
 					state <= 0;
