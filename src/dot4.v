@@ -1,5 +1,10 @@
 //`timescale 1ns / 1ps
 
+/*
+ * Copyright (c) 2024 Matt Pongsagon Vichitvejpaisal
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Q8.8
 //fix   dot4(Vec4f v1, Vec4f v2){
 //  return  multfix(v1.x,v2.x)+multfix(v1.y,v2.y)+multfix(v1.z,v2.z)+multfix(v1.w,v2.w);
@@ -28,8 +33,11 @@ module dot4(
     wire signed [31:0] mul_result;  
     reg mul_start;
     wire mul_done;
+    wire mul_busy;
+    wire mul_aux;
     slowmpy #(.LGNA(4),.NA(16)) mul2 (.i_clk (clk), .i_reset(reset), .i_stb(mul_start),.i_a(mul_a)
-    			,.i_b(mul_b),.i_aux(1'b0),.o_done(mul_done),.o_p(mul_result));
+    			,.i_b(mul_b),.i_aux(1'b0),.o_done(mul_done),.o_p(mul_result)
+    			,.o_busy(mul_busy),.o_aux(mul_aux));
 
 
     reg [2:0] state;		// 5 states
@@ -50,6 +58,7 @@ module dot4(
     	else begin
     		case (state)
     			0: begin
+    				done <= 0;
     				if (start) begin
     					mul_a <= v1_x;								
 						mul_b <= v2_x;

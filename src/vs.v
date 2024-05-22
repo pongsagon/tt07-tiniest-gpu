@@ -1,5 +1,14 @@
 //`timescale 1ns / 1ps
 
+/*/
+ * Copyright (c) 2024 Matt Pongsagon Vichitvejpaisal
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+ // Transform coordinate
+
+ // world, ndc: clockwise order, Y- point up
+ // screen: Y+ point down
 
 module vs(
 	input clk, 		
@@ -87,8 +96,13 @@ module vs(
 	wire signed [31:0] div_result;
     reg div_start;
 	wire div_done;
+	wire div_busy;
+	wire div_valid;
+	wire div_dbz;
+	wire div_ovf;
     div div1 (.clk (clk), .rst(reset),.start(div_start),.done(div_done)
-    		  ,.a(div_a),.b(div_b),.val(div_result));
+    		  ,.a(div_a),.b(div_b),.val(div_result)
+    		  ,.busy(div_busy),.valid(div_valid),.dbz(div_dbz),.ovf(div_ovf));
 
 	// mul 20-bit used to compute ei_init
 	reg signed [19:0] mul_a;  
@@ -96,8 +110,11 @@ module vs(
     wire signed [39:0] mul_result;  
     reg mul_start;
     wire mul_done;
+    wire mul_busy;
+    wire mul_aux;
     slowmpy mul (.i_clk (clk), .i_reset(reset), .i_stb(mul_start),.i_a(mul_a)
-    			,.i_b(mul_b),.i_aux(1'b0),.o_done(mul_done),.o_p(mul_result));
+    			,.i_b(mul_b),.i_aux(1'b0),.o_done(mul_done),.o_p(mul_result)
+    			,.o_busy(mul_busy),.o_aux(mul_aux));
 
     reg dot_start;
     wire dot_done;
@@ -130,7 +147,7 @@ module vs(
 				v1_x = x_world_v0;
 				v1_y = y_world_v0;
 				v1_z = z_world_v0;
-				v1_w = 1;
+				v1_w = 16'sb0000_0001_0000_0000;
 				v2_x = vp_00;
 				v2_y = vp_01;
 				v2_z = vp_02;
@@ -140,7 +157,7 @@ module vs(
 				v1_x = x_world_v0;
 				v1_y = y_world_v0;
 				v1_z = z_world_v0;
-				v1_w = 1;
+				v1_w = 16'sb0000_0001_0000_0000;
 				v2_x = vp_10;
 				v2_y = vp_11;
 				v2_z = vp_12;
@@ -150,7 +167,7 @@ module vs(
 				v1_x = x_world_v0;
 				v1_y = y_world_v0;
 				v1_z = z_world_v0;
-				v1_w = 1;
+				v1_w = 16'sb0000_0001_0000_0000;
 				v2_x = vp_30;
 				v2_y = vp_31;
 				v2_z = vp_32;
@@ -160,7 +177,7 @@ module vs(
 				v1_x = x_world_v1;
 				v1_y = y_world_v1;
 				v1_z = z_world_v1;
-				v1_w = 1;
+				v1_w = 16'sb0000_0001_0000_0000;
 				v2_x = vp_00;
 				v2_y = vp_01;
 				v2_z = vp_02;
@@ -170,7 +187,7 @@ module vs(
 				v1_x = x_world_v1;
 				v1_y = y_world_v1;
 				v1_z = z_world_v1;
-				v1_w = 1;
+				v1_w = 16'sb0000_0001_0000_0000;
 				v2_x = vp_10;
 				v2_y = vp_11;
 				v2_z = vp_12;
@@ -180,7 +197,7 @@ module vs(
 				v1_x = x_world_v1;
 				v1_y = y_world_v1;
 				v1_z = z_world_v1;
-				v1_w = 1;
+				v1_w = 16'sb0000_0001_0000_0000;
 				v2_x = vp_30;
 				v2_y = vp_31;
 				v2_z = vp_32;
@@ -190,7 +207,7 @@ module vs(
 				v1_x = x_world_v2;
 				v1_y = y_world_v2;
 				v1_z = z_world_v2;
-				v1_w = 1;
+				v1_w = 16'sb0000_0001_0000_0000;
 				v2_x = vp_00;
 				v2_y = vp_01;
 				v2_z = vp_02;
@@ -200,7 +217,7 @@ module vs(
 				v1_x = x_world_v2;
 				v1_y = y_world_v2;
 				v1_z = z_world_v2;
-				v1_w = 1;
+				v1_w = 16'sb0000_0001_0000_0000;
 				v2_x = vp_10;
 				v2_y = vp_11;
 				v2_z = vp_12;
@@ -210,7 +227,7 @@ module vs(
 				v1_x = x_world_v2;
 				v1_y = y_world_v2;
 				v1_z = z_world_v2;
-				v1_w = 1;
+				v1_w = 16'sb0000_0001_0000_0000;
 				v2_x = vp_30;
 				v2_y = vp_31;
 				v2_z = vp_32;
@@ -465,7 +482,7 @@ module vs(
 					state_transform <= 18;
 				end
 				18: begin
-					x_ndc_v1 <= x_ndc_v1 + 16'sb001_0100_0000_00000;		
+					x_ndc_v1 <= x_ndc_v1 + 16'sb001_0100_0000_00000;	
 					//
 					x_ndc_v2 <= x_ndc_v2 + tmp_ndc;
 					// y_ndc * 240 + 240 = y_ndc << 8 - y_ndcc << 4 + 240
@@ -483,7 +500,7 @@ module vs(
 					state_transform <= 20;
 				end
 				20: begin
-					y_ndc_v0 <= y_ndc_v0 + 16'sb000_1111_0000_00000;		// Q11.5 (240)
+					y_ndc_v0 <= y_ndc_v0 + 16'sb000_1111_0000_00000;		// Q11.5 (240) 16'sb000_1111_0000_00000
 					//
 					y_ndc_v1 <= y_ndc_v1 - tmp_ndc;
 					//
@@ -492,13 +509,13 @@ module vs(
 					state_transform <= 21;
 				end
 				21: begin
-					y_ndc_v1 <= y_ndc_v1 + 16'sb000_1111_0000_00000;		
+					y_ndc_v1 <= y_ndc_v1 + 16'sb000_1111_0000_00000;	
 					//
 					y_ndc_v2 <= y_ndc_v2 - tmp_ndc;
 					state_transform <= 22;
 				end
 				22: begin
-					y_ndc_v2 <= y_ndc_v2 + 16'sb000_1111_0000_00000;		
+					y_ndc_v2 <= y_ndc_v2 + 16'sb000_1111_0000_00000;	
 					//
 					state_transform <= 23;
 				end
@@ -521,6 +538,7 @@ module vs(
 						y_screen_v2_buff1 <= {9'b0000_0000_0,y_ndc_v2[15:5]};
 						buff1_ready <= 1;
 					end
+
 					state_transform <= 30;
 				end 
 
@@ -555,6 +573,7 @@ module vs(
 					y_screen_v2 <= y_screen_v2_buff2;
 	    		end
 	    	end
+
 
 			//////////////////////////////
 			// compute e0_init

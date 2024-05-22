@@ -1,6 +1,10 @@
 //`timescale 1ns / 1ps
 
-
+/*
+ * Copyright (c) 2024 Matt Pongsagon Vichitvejpaisal
+ * SPDX-License-Identifier: Apache-2.0
+ */
+ 
 module raster(
 	input clk, 		
 	input reset,
@@ -42,13 +46,14 @@ module raster(
 					state_pixel <= state_pixel + 1;
 					if (state_pixel == 1) begin 		
 						state_pixel <= 0;
-						//if ((e0_t1 <= 0)) begin
-						//if ((e0_t1 <= 0) && (e1_t1 <= 0) && (e2_t1 <= 0)) begin
-						if ((e0_t1 > 0) && (e1_t1 > 0) && (e2_t1 > 0)) begin 		// inside + (diff from pico verion)
+						if ((e0_t1 <= 0) && (e1_t1 <= 0) && (e2_t1 <= 0)) begin 	// pico version
 							rgb <= 6'b001100;
 						end
+						else if ((e0_t1 > 0) && (e1_t1 > 0) && (e2_t1 > 0)) begin 	// reverse order, back facing	
+							rgb <= 6'b111100;
+						end
 						else begin
-							rgb <= 6'b000000;
+							rgb <= 6'b010101;
 						end
 						e0_t1 <= e0_t1 + (y_screen_v1 - y_screen_v0);	// a0
 						e1_t1 <= e1_t1 + (y_screen_v2 - y_screen_v1);	// a1

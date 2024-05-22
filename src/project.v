@@ -14,7 +14,7 @@ module tt_um_pongsagon_tiniest_gpu (
     input  wire       ena,      // always 1 when the design is powered, so you can ignore it
     input  wire       clk,      // clock
     input  wire       rst_n    // reset_n - low to reset
-    // verilator
+    //! verilator
     // input SIM_pc_data_ready,						
 	// input signed [15:0] SIM_x_world_v0,			
 	// input signed [15:0] SIM_y_world_v0,
@@ -95,8 +95,8 @@ module tt_um_pongsagon_tiniest_gpu (
 	uart_top UART_UNIT(.clk(clk),.reset(reset),.rx(rx),.rx_data_out(read_data),.rx_done_tick(read_done));
 	// ia ia1( clk, reset, read_data,      idx, update_reg, pc_ready);
 
-	// tmp code, assign something to wire has no driver warning
-	assign update_reg = read_done;
+	//+ tmp code, assign something to wire has no driver warning
+	assign update_reg = 1'b0;
 	assign pc_ready = read_done;
 	assign idx = 6'b11_1111;
 
@@ -304,7 +304,8 @@ module tt_um_pongsagon_tiniest_gpu (
 				endcase
 			end
 		end
-		pc_data_ready <= pc_ready;
+		//! comment out for verilator
+		//pc_data_ready <= pc_ready;
 	end
 
 	
@@ -360,7 +361,7 @@ module tt_um_pongsagon_tiniest_gpu (
 
 
 	//////////////////////////////
-	// verilator
+	//! verilator
 	//////////////////////////////
 
 	// always @(posedge clk) begin
@@ -403,7 +404,7 @@ module tt_um_pongsagon_tiniest_gpu (
 
 	//////////////////////////////
 	// fpga code to reduce clk from 100Mhz to 50Mhz
-	// commment this block in ASIC, verilator
+	//! commment this block in ASIC, verilator
 	//////////////////////////////
 	
 	/*reg[27:0] counter=28'd0;
