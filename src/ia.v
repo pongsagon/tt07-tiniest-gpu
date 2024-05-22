@@ -15,6 +15,7 @@ module ia(
 	
 	
 	wire read_done;
+	reg reg_read_done;
 	wire [7:0] byte_data;
 
 	uart_top UART_UNIT(.clk(clk),.reset(reset),.rx(rx),
@@ -24,19 +25,21 @@ module ia(
 	reg [1:0] state;
 
 	always @(posedge clk) begin
+		reg_read_done <= read_done;
 		if (reset) begin
 			pc_ready <= 0;
 			update_reg <= 0;
 			idx <= 0;
 			read_data <= 0;
 			state <= 0;
+			reg_read_done <= 0;
 		end
 		else begin
 			case (state)
 				0: begin
 					pc_ready <= 0;
 					update_reg <= 0;
-					if (read_done) begin
+					if (reg_read_done) begin
 						read_data <= byte_data;
 						idx <= 0;
 						update_reg <= 1;
@@ -55,7 +58,7 @@ module ia(
 				end
 				2: begin
 					update_reg <= 0;
-					if (read_done) begin
+					if (reg_read_done) begin
 						read_data <= byte_data;
 						idx <= idx + 1;
 						update_reg <= 1;
