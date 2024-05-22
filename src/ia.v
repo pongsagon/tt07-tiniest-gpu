@@ -62,8 +62,11 @@ module ia(
 						read_data <= byte_data;
 						idx <= idx + 1;
 						update_reg <= 1;
-						state <= 1;
+						state <= 3;
 					end
+				end
+				3: begin
+					state <= 1;
 				end
 				
 
