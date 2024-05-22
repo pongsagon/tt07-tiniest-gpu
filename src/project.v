@@ -304,8 +304,9 @@ module tt_um_pongsagon_tiniest_gpu (
 				endcase
 			end
 		end
+		
 		//! comment out for verilator
-		//pc_data_ready <= pc_ready;
+		pc_data_ready <= pc_ready;
 	end
 
 	
