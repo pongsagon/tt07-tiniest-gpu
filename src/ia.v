@@ -55,7 +55,7 @@ module ia(
 					end
 					else begin
 						pc_ready <= 1;
-						state <= 0;
+						state <= 1;
 					end
 				end
 				
