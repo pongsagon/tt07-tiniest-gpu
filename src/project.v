@@ -57,7 +57,7 @@ module tt_um_pongsagon_tiniest_gpu (
 	wire [7:0] read_data;
 	wire update_reg;		
 	wire pc_ready;
-	wire [5:0] idx;		// 0-53
+	wire [5:0] idx;		// 0-54
 
 	ia ia1(.clk(clk),.reset(reset),.rx(rx),.read_data(read_data),
 			.idx(idx),.update_reg(update_reg),.pc_ready(pc_ready));
@@ -279,6 +279,10 @@ module tt_um_pongsagon_tiniest_gpu (
 	wire signed [19:0] e0_init_t1;
 	wire signed [19:0] e1_init_t1;
 	wire signed [19:0] e2_init_t1;
+	wire signed [21:0] bar_iy;
+    wire signed [21:0] bar_iy_dx;
+    wire signed [21:0] bar_iz;		
+    wire signed [21:0] bar_iz_dx;
 
 	vs vs1(.clk(clk),.reset(reset),.x(x),.y(y),.pc_data_ready(pc_data_ready),
 					.x_world_v0(x_world_v0),.y_world_v0(y_world_v0),.z_world_v0(z_world_v0),
@@ -290,12 +294,14 @@ module tt_um_pongsagon_tiniest_gpu (
 					.vp_10(vp_10),.vp_11(vp_11),.vp_12(vp_12),.vp_13(vp_13),
 					.vp_30(vp_30),.vp_31(vp_31),.vp_32(vp_32),.vp_33(vp_33),.tri_color(tri_color),
 					.y_screen_v0(y_screen_v0),.y_screen_v1(y_screen_v1),.y_screen_v2(y_screen_v2),
-					.e0_init_t1(e0_init_t1),.e1_init_t1(e1_init_t1),.e2_init_t1(e2_init_t1));
+					.e0_init_t1(e0_init_t1),.e1_init_t1(e1_init_t1),.e2_init_t1(e2_init_t1),
+					.bar_iy(bar_iy),.bar_iy_dx(bar_iy_dx),.bar_iz(bar_iz),.bar_iz_dx(bar_iz_dx));
 
 	raster raster1(.clk(clk),.reset(reset),.x(x),.y(y),.tri_color(tri_color),
 					.y_screen_v0(y_screen_v0),.y_screen_v1(y_screen_v1),.y_screen_v2(y_screen_v2),
-					.e0_init_t1(e0_init_t1),.e1_init_t1(e1_init_t1),.e2_init_t1(e2_init_t1),.rgb(rgb));
-
+					.e0_init_t1(e0_init_t1),.e1_init_t1(e1_init_t1),.e2_init_t1(e2_init_t1),
+					.bar_iy(bar_iy),.bar_iy_dx(bar_iy_dx),.bar_iz(bar_iz),.bar_iz_dx(bar_iz_dx),
+					.rgb(rgb));
 	wire hsync;
 	wire vsync;
 	wire [9:0] x, y;
