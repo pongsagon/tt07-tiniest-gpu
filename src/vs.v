@@ -46,17 +46,21 @@ module vs(
 	input signed [15:0] vp_32,
 	input signed [15:0] vp_33,
 	// to raster
-	output reg [2:0] tri_color,				// 2-bit intensity for each tri							
+	output reg [2:0] tri_color,					// 2-bit intensity for each tri							
 	output reg signed [19:0] y_screen_v0,		// change per frame, int20		
 	output reg signed [19:0] y_screen_v1,	
 	output reg signed [19:0] y_screen_v2,
 	output reg signed [19:0] e0_init_t1,		// change per line, int20
 	output reg signed [19:0] e1_init_t1,
-	output reg signed [19:0] e2_init_t1
+	output reg signed [19:0] e2_init_t1,
+	output reg signed [21:0] bar_iy,			// Q4.16
+    output reg signed [21:0] bar_iy_dx,
+    output reg signed [21:0] bar_iz,			
+    output reg signed [21:0] bar_iz_dx
 	);
 
 
-	// internal reg
+	// for vs
 	reg signed [15:0] x_clip_v0;				// Q8.8
 	reg signed [15:0] x_clip_v1;
 	reg signed [15:0] x_clip_v2;
@@ -91,7 +95,7 @@ module vs(
 	reg [2:0] tmp_color;
 
 
-
+	// used by div w
 	reg signed [31:0] div_a;  
 	reg signed [31:0] div_b;  
 	wire signed [31:0] div_result;
@@ -101,9 +105,26 @@ module vs(
 	wire div_valid;
 	wire div_dbz;
 	wire div_ovf;
+	// Q16.16
     div div1 (.clk (clk), .rst(reset),.start(div_start),.done(div_done)
     		  ,.a(div_a),.b(div_b),.val(div_result)
     		  ,.busy(div_busy),.valid(div_valid),.dbz(div_dbz),.ovf(div_ovf));
+
+    // used by denom, (div w and denom can be computed at the same time)
+    // Q20.20
+    reg signed [39:0] div2_a;  
+	reg signed [39:0] div2_b;  
+	wire signed [39:0] div2_result;
+    reg div2_start;
+	wire div2_done;
+	wire div2_busy;
+	wire div2_valid;
+	wire div2_dbz;
+	wire div2_ovf;
+    div #(.WIDTH(40),.FBITS(20))div2 
+    		  (.clk (clk), .rst(reset),.start(div2_start),.done(div2_done)
+    		  ,.a(div2_a),.b(div2_b),.val(div2_result)
+    		  ,.busy(div2_busy),.valid(div2_valid),.dbz(div2_dbz),.ovf(div2_ovf));
 
 	// mul 20-bit used to compute ei_init
 	reg signed [19:0] mul_a;  
@@ -116,6 +137,18 @@ module vs(
     slowmpy mul (.i_clk (clk), .i_reset(reset), .i_stb(mul_start),.i_a(mul_a)
     			,.i_b(mul_b),.i_aux(1'b0),.o_done(mul_done),.o_p(mul_result)
     			,.o_busy(mul_busy),.o_aux(mul_aux));
+    // mul 22-bit used to compute bar
+    reg signed [21:0] mul2_a;  
+	reg signed [21:0] mul2_b;  
+    wire signed [43:0] mul2_result;  
+    reg mul2_start;
+    wire mul2_done;
+    wire mul2_busy;
+    wire mul2_aux;
+    slowmpy #(.LGNA(5),.NA(22)) mul22 
+    			(.i_clk (clk), .i_reset(reset), .i_stb(mul2_start),.i_a(mul2_a)
+    			,.i_b(mul2_b),.i_aux(1'b0),.o_done(mul2_done),.o_p(mul2_result)
+    			,.o_busy(mul2_busy),.o_aux(mul2_aux));
 
     reg dot_start;
     wire dot_done;
@@ -260,11 +293,15 @@ module vs(
 	end
 
 
-    // for compute ei_int
-    reg [1:0] state_ei_line;
-    reg [3:0] state_ei_frame;
+    // for compute ei_int,
+    reg [1:0] state_ei_line;			// 0-
+    reg [4:0] state_ei_frame;			// 0-25
     reg signed [19:0] tmp_ei_mul1;
     reg signed [19:0] tmp_ei_mul2;
+    // bar_iy, bar_iz, denom
+    reg signed [21:0] denom;			// Q2.20  [-1,0.999]
+    reg signed [21:0] bar_iy_dy;		// Q2.20
+    reg signed [21:0] bar_iz_dy;
 
 	always @(posedge clk) begin
 		if (reset) begin
@@ -272,9 +309,15 @@ module vs(
 			div_a <= 0;
 			div_b <= 0;
 			div_start <= 0;
+			div2_a <= 0;
+			div2_b <= 0;
+			div2_start <= 0;
 			mul_a <= 0;
 			mul_b <= 0;
 			mul_start <= 0;
+			mul2_a <= 0;
+			mul2_b <= 0;
+			mul2_start <= 0;
 			// compute transform
 			state_transform <= 0;
 			tmp_ndc <= 0;
@@ -284,7 +327,15 @@ module vs(
 			state_ei_frame <= 0;
 			tmp_ei_mul1 <= 0;
 			tmp_ei_mul2 <= 0;
-			// internal
+			// bar, denom
+			denom <= 0;
+			bar_iy <= 0;
+		    bar_iy_dy <= 0;
+		    bar_iy_dx <= 0;
+		    bar_iz <= 0;
+		    bar_iz_dy <= 0;
+		    bar_iz_dx <= 0;
+			// vs
 			x_clip_v0 <= 0;
 			x_clip_v1 <= 0;
 			x_clip_v2 <= 0;
@@ -623,22 +674,31 @@ module vs(
 			// compute e0_init
 			//////////////////////////////
 			if (y < 480) begin
+				// @ endline, 
+				// 		- must finished before x == 799, raster will use e0_init @ x == 799
 				if (x == 640) begin
-					// @ endline, compute e0_init -= x2x1; 
-					// 		- must finished before x == 799, raster will use e0_init @ x == 799
+					// 1. compute e0_init -= x2x1; 
+					// 2. bar_iy += bar_iy_dy;
+					//	  bar_iz += bar_iz_dy;
+					// do only 1 time, x == 640 for 2 clk
 					state_ei_line <= state_ei_line + 1;
 					if (state_ei_line == 1) begin
 						state_ei_line <= 0;
 						e0_init_t1 <= e0_init_t1 - (x_screen_v1 - x_screen_v0);		// b0
 						e1_init_t1 <= e1_init_t1 - (x_screen_v2 - x_screen_v1);		// b1
 						e2_init_t1 <= e2_init_t1 - (x_screen_v0 - x_screen_v2);		// b2
+						//
+						bar_iy <= bar_iy + bar_iy_dy;
+						bar_iz <= bar_iz + bar_iz_dy;
 					end
 				end
 			end // y < 480
 			else begin
-				// @ endframe, compute e0_init = (-pts[0].x * a0) + (pts[0].y * (pts[1].x-pts[0].x);
-				//		- call mul 6  time
+				// @ endframe
 				case (state_ei_frame)
+					//
+					//	1. compute e0_init = (-pts[0].x * a0) + (pts[0].y * (pts[1].x-pts[0].x);
+					//		- call mul 6  time
 					0: begin
 						if ((y == 480) && (x == 1)) begin
 							mul_a <= x_screen_v0;					// pts[0].x
@@ -714,8 +774,175 @@ module vs(
 					end
 					9: begin
 						e2_init_t1 <= tmp_ei_mul2 + tmp_ei_mul1;	// fin e2_init_t1
-						state_ei_frame <= 0;
+						state_ei_frame <= 10;
 					end 
+					//
+					// 2. compute denom
+					//		Q20.0 denom_i = (pts[0].y-pts[2].y) * (pts[1].x-pts[2].x) + (pts[1].y-pts[2].y) * (pts[2].x-pts[0].x)
+					//		Q2.20 denom = float2fix14(1.0f/denom_i);
+					//		640x640 x2 = 819,200      2^20
+    				//      1/819,200 = 0.00000122,   1/2^20   
+					10: begin
+						mul_a <= y_screen_v0 - y_screen_v2;			// pts[0].y-pts[2].y
+						mul_b <= x_screen_v1 - x_screen_v2;			// pts[1].x-pts[2].x
+						mul_start <= 1;
+						state_ei_frame <= 11;
+					end
+					11: begin
+						mul_start <= 0;
+						if (mul_done) begin
+							tmp_ei_mul1 <= mul_result[19:0];		// ready in 23clk for 20bit mul
+							mul_a <= y_screen_v1 - y_screen_v2;		// pts[1].y-pts[2].y
+							mul_b <= x_screen_v2 - x_screen_v0;		// pts[2].x-pts[0].x
+							mul_start <= 1;
+							state_ei_frame <= 12;
+						end
+					end
+					12: begin
+						mul_start <= 0;
+						if (mul_done) begin
+							tmp_ei_mul2 <= tmp_ei_mul1 + mul_result[19:0];		// denom_i
+							state_ei_frame <= 13;
+						end 
+					end
+					13: begin
+						// Q20.0->Q20.20 -> Q20.20/Q20.20 
+						div2_a <= { 20'b0000_0000_0000_0000_0001, 20'b0000_0000_0000_0000_0001};	// 1.0f/denom_i
+						div2_b <= { tmp_ei_mul2, 20'b0000_0000_0000_0000_0000};
+						div2_start <= 1;
+						state_ei_frame <= 14;
+					end
+					14: begin
+						div2_start <= 0;
+						if (div2_done) begin
+							// Q20.20->Q2.20
+							denom <= {div2_result[21:0]};
+							state_ei_frame <= 15;
+						end
+					end
+					//
+					//3. bar_iy, bar_iz  (no need for bar_ix, uv[0] (0,0))
+					// 	Q2.20 = (Q20.0->)Q20.2 * Q2.20
+					//	      = 500,000 * 0.000002 = 1
+					//        = 10,000 * 0.000002 = 0.02
+					//	Q2.20 = 500 * 0.000002 = 0.001, 2^10
+					//		  = 100 * 0.000002 = 0.0002, 2^16 = 0.000015
+					//		
+					//		 bar_iy <= ((pts[0].y * x1x3) + (-y1y3 * pts[0].x)) * denom;	// 3 mul
+				    //		 bar_iy_dy <= -x1x3 * denom;		// 1 mul
+					//		 bar_iy_dx <= y1y3 * denom;		// 1 mul
+					//		 bar_iz <= ((pts[1].y * x2x1) + (y1y2 * pts[1].x)) * denom;	// 3 mul
+					//		 bar_iz_dy <= -x2x1 * denom;		// 1 mul
+					//		 bar_iz_dx <= -y1y2 * denom;		// 1 mul
+					15: begin
+						mul_a <= y_screen_v0;						// pts[0].y
+						mul_b <= x_screen_v0 - x_screen_v2;			// x1x3, pts[0].x-pts[2].x
+						mul_start <= 1;
+						state_ei_frame <= 16;
+					end
+					16: begin
+						mul_start <= 0;
+						if (mul_done) begin
+							tmp_ei_mul1 <= mul_result[19:0];		// ready in 23clk for 20bit mul
+							mul_a <= y_screen_v2 - y_screen_v0;		// -y1y3, pts[2].y - pts[0].y
+							mul_b <= x_screen_v0;					// pts[0].x
+							mul_start <= 1;
+							state_ei_frame <= 17;
+						end
+					end
+					17: begin
+						mul_start <= 0;
+						if (mul_done) begin
+							mul2_a <= {tmp_ei_mul1 + mul_result[19:0],2'b00};		// ready in 23clk for 20bit mul
+							mul2_b <= denom;							
+							mul2_start <= 1;
+							state_ei_frame <= 18;
+						end
+					end
+					18: begin
+						mul2_start <= 0;
+						if (mul2_done) begin
+							bar_iy <= mul2_result[23:2];				// ready in 23clk for 20bit mul
+							//
+							mul2_a <= {x_screen_v2 - x_screen_v0,2'b00};		// -x1x3, pts[2].x - pts[0].x
+							mul2_b <= denom;					
+							mul2_start <= 1;
+							state_ei_frame <= 19;
+						end
+					end
+					19: begin
+						mul2_start <= 0;
+						if (mul2_done) begin
+							bar_iy_dy <= mul2_result[23:2];				// ready in 23clk for 20bit mul
+							//
+							mul2_a <= {y_screen_v0 - y_screen_v2,2'b00};			// y1y3, pts[0].y - pts[2].y
+							mul2_b <= denom;					
+							mul2_start <= 1;
+							state_ei_frame <= 20;
+						end
+					end
+					20: begin
+						mul2_start <= 0;
+						if (mul2_done) begin
+							bar_iy_dx <= mul2_result[23:2];				// ready in 23clk for 20bit mul
+							//
+							mul_a <= y_screen_v1;						// pts[1].y
+							mul_b <= x_screen_v1 - x_screen_v0;			// x2x1		
+							mul_start <= 1;
+							state_ei_frame <= 21;
+						end
+					end
+					21: begin
+						mul_start <= 0;
+						if (mul_done) begin
+							tmp_ei_mul1 <= mul_result[19:0];		// ready in 23clk for 20bit mul
+							mul_a <= y_screen_v0 - y_screen_v1;		// y1y2, pts[0].y - pts[1].y
+							mul_b <= x_screen_v1;					// pts[1].x
+							mul_start <= 1;
+							state_ei_frame <= 22;
+						end
+					end
+					22: begin
+						mul_start <= 0;
+						if (mul_done) begin
+							mul2_a <= {tmp_ei_mul1 + mul_result[19:0],2'b00};		// ready in 23clk for 20bit mul
+							mul2_b <= denom;							
+							mul2_start <= 1;
+							state_ei_frame <= 23;
+						end
+					end
+					23: begin
+						mul2_start <= 0;
+						if (mul2_done) begin
+							bar_iz <= mul2_result[23:2];				// ready in 23clk for 20bit mul
+							//
+							mul2_a <= {x_screen_v0 - x_screen_v1,2'b00};		// -x2x1, pts[0].x - pts[1].x
+							mul2_b <= denom;					
+							mul2_start <= 1;
+							state_ei_frame <= 24;
+						end
+					end
+					24: begin
+						mul2_start <= 0;
+						if (mul2_done) begin
+							bar_iz_dy <= mul2_result[23:2];				// ready in 23clk for 20bit mul
+							//
+							mul2_a <= {y_screen_v1 - y_screen_v0,2'b00};			// -y1y2, pts[1].y - pts[0].y
+							mul2_b <= denom;					
+							mul2_start <= 1;
+							state_ei_frame <= 25;
+						end
+					end
+					25: begin
+						mul2_start <= 0;
+						if (mul2_done) begin
+							bar_iz_dx <= mul2_result[23:2];				// ready in 23clk for 20bit mul
+							//
+							state_ei_frame <= 0;
+						end
+					end
+
+
 					default: begin
 						state_ei_frame <= 0;
 					end
