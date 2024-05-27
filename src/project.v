@@ -300,12 +300,14 @@ module tt_um_pongsagon_tiniest_gpu (
 	wire signed [19:0] y_screen_v0;		
 	wire signed [19:0] y_screen_v1;	
 	wire signed [19:0] y_screen_v2;
+	wire signed [19:0] y_screen_v3;
 	wire signed [19:0] e0_init_t1;
 	wire signed [19:0] e1_init_t1;
 	wire signed [19:0] e2_init_t1;
 	wire signed [21:0] bar_iy;
     wire signed [21:0] bar_iy_dx;
     wire signed [21:0] bar_iz;		
+    wire signed [21:0] bar_iz_dx;
     wire signed [21:0] bar2_iy;
     wire signed [21:0] bar2_iy_dx;
     wire signed [21:0] bar2_iz;		
