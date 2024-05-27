@@ -62,8 +62,8 @@ module raster(
 	reg bg;
 
 	//Q2.20 [0.0.999] x 128 -> Q9.13
-	assign u_ = (tri_idx)? ui[19:13] : ui2[19:13];
-	assign v_ = (tri_idx)? vi[19:13] : vi2[19:13];
+	assign u_ = (tri_idx)? ui2[19:13] : ui[19:13];
+	assign v_ = (tri_idx)? vi2[19:13] : vi[19:13];
 
 	bitmap_rom tex(.x(u_),.y(v_),.pixel(texel)); 
 
@@ -150,6 +150,7 @@ module raster(
 											rgb <= 6'b00_0000;
 										end
 									end
+									//rgb <= 6'b01_0101;
 								end
 								else begin
 									if (back_face) begin
