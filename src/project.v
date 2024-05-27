@@ -33,6 +33,9 @@ module tt_um_pongsagon_tiniest_gpu (
 	reg signed [15:0] x_world_v2;
 	reg signed [15:0] y_world_v2;
 	reg signed [15:0] z_world_v2;
+	reg signed [15:0] x_world_v3;
+	reg signed [15:0] y_world_v3;
+	reg signed [15:0] z_world_v3;
 	reg signed [15:0] nx;					// Q8.8
 	reg signed [15:0] ny;
 	reg signed [15:0] nz;
@@ -57,7 +60,7 @@ module tt_um_pongsagon_tiniest_gpu (
 	wire [7:0] read_data;
 	wire update_reg;		
 	wire pc_ready;
-	wire [5:0] idx;		// 0-54
+	wire [5:0] idx;		// 0-59
 
 	ia ia1(.clk(clk),.reset(reset),.rx(rx),.read_data(read_data),
 			.idx(idx),.update_reg(update_reg),.pc_ready(pc_ready));
@@ -76,6 +79,9 @@ module tt_um_pongsagon_tiniest_gpu (
 			x_world_v2 <= 0;
 			y_world_v2 <= 0;
 			z_world_v2 <= 0;
+			x_world_v3 <= 0;
+			y_world_v3 <= 0;
+			z_world_v3 <= 0;
 			nx <= 0;				
 			ny <= 0;
 			nz <= 0;
@@ -260,6 +266,24 @@ module tt_um_pongsagon_tiniest_gpu (
 					53: begin
 						vp_33[15:8] <= read_data;		
 					end
+					54: begin
+						x_world_v3[7:0] <= read_data;		
+					end
+					55: begin
+						x_world_v3[15:8] <= read_data;	
+					end
+					56: begin
+						y_world_v3[7:0] <= read_data;		
+					end
+					57: begin
+						y_world_v3[15:8] <= read_data;		
+					end
+					58: begin
+						z_world_v3[7:0] <= read_data;		
+					end
+					59: begin
+						z_world_v3[15:8] <= read_data;	
+					end	
 					default: begin
 						
 					end
@@ -282,26 +306,38 @@ module tt_um_pongsagon_tiniest_gpu (
 	wire signed [21:0] bar_iy;
     wire signed [21:0] bar_iy_dx;
     wire signed [21:0] bar_iz;		
-    wire signed [21:0] bar_iz_dx;
+    wire signed [21:0] bar2_iy;
+    wire signed [21:0] bar2_iy_dx;
+    wire signed [21:0] bar2_iz;		
+    wire signed [21:0] bar2_iz_dx;
+    wire signed [19:0] e0_init_t2;
+	wire signed [19:0] e1_init_t2;
+	wire signed [19:0] e2_init_t2;
 
 	vs vs1(.clk(clk),.reset(reset),.x(x),.y(y),.pc_data_ready(pc_data_ready),
 					.x_world_v0(x_world_v0),.y_world_v0(y_world_v0),.z_world_v0(z_world_v0),
 					.x_world_v1(x_world_v1),.y_world_v1(y_world_v1),.z_world_v1(z_world_v1),
 					.x_world_v2(x_world_v2),.y_world_v2(y_world_v2),.z_world_v2(z_world_v2),
+					.x_world_v3(x_world_v3),.y_world_v3(y_world_v3),.z_world_v3(z_world_v3),
 					.nx(nx),.ny(ny),.nz(nz),
 					.light_x(light_x),.light_y(light_y),.light_z(light_z),
 					.vp_00(vp_00),.vp_01(vp_01),.vp_02(vp_02),.vp_03(vp_03),
 					.vp_10(vp_10),.vp_11(vp_11),.vp_12(vp_12),.vp_13(vp_13),
 					.vp_30(vp_30),.vp_31(vp_31),.vp_32(vp_32),.vp_33(vp_33),.tri_color(tri_color),
-					.y_screen_v0(y_screen_v0),.y_screen_v1(y_screen_v1),.y_screen_v2(y_screen_v2),
+					.y_screen_v0(y_screen_v0),.y_screen_v1(y_screen_v1),.y_screen_v2(y_screen_v2),.y_screen_v3(y_screen_v3),
 					.e0_init_t1(e0_init_t1),.e1_init_t1(e1_init_t1),.e2_init_t1(e2_init_t1),
-					.bar_iy(bar_iy),.bar_iy_dx(bar_iy_dx),.bar_iz(bar_iz),.bar_iz_dx(bar_iz_dx));
+					.e0_init_t2(e0_init_t2),.e1_init_t2(e1_init_t2),.e2_init_t2(e2_init_t2),
+					.bar_iy(bar_iy),.bar_iy_dx(bar_iy_dx),.bar_iz(bar_iz),.bar_iz_dx(bar_iz_dx),
+					.bar2_iy(bar2_iy),.bar2_iy_dx(bar2_iy_dx),.bar2_iz(bar2_iz),.bar2_iz_dx(bar2_iz_dx));
 
 	raster raster1(.clk(clk),.reset(reset),.x(x),.y(y),.tri_color(tri_color),
-					.y_screen_v0(y_screen_v0),.y_screen_v1(y_screen_v1),.y_screen_v2(y_screen_v2),
+					.y_screen_v0(y_screen_v0),.y_screen_v1(y_screen_v1),.y_screen_v2(y_screen_v2),.y_screen_v3(y_screen_v3),
 					.e0_init_t1(e0_init_t1),.e1_init_t1(e1_init_t1),.e2_init_t1(e2_init_t1),
+					.e0_init_t2(e0_init_t2),.e1_init_t2(e1_init_t2),.e2_init_t2(e2_init_t2),
 					.bar_iy(bar_iy),.bar_iy_dx(bar_iy_dx),.bar_iz(bar_iz),.bar_iz_dx(bar_iz_dx),
+					.bar2_iy(bar2_iy),.bar2_iy_dx(bar2_iy_dx),.bar2_iz(bar2_iz),.bar2_iz_dx(bar2_iz_dx),
 					.rgb(rgb));
+
 	wire hsync;
 	wire vsync;
 	wire [9:0] x, y;
