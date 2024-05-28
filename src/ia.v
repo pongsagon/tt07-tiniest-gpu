@@ -9,7 +9,7 @@ module ia(
 	input rx,
 	output reg pc_ready,				//must be true for only 1 clk
 	output reg [7:0] read_data,
-	output reg [5:0] idx,				// 0-54
+	output reg [5:0] idx,				// 0-60
 	output reg update_reg
 	);
 	
@@ -45,7 +45,7 @@ module ia(
 				end
 				1: begin
 					update_reg <= 0;
-					if (idx < 53) begin
+					if (idx < 60) begin
 						if (read_done) begin
 							read_data <= byte_data;
 							idx <= idx + 1;

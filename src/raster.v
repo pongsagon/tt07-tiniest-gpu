@@ -60,7 +60,7 @@ module raster(
 
 	wire texel0;	
 	wire texel1;	
-	//wire texel2;	
+	wire texel2;	
 	wire [6:0] u_;
 	wire [6:0] v_;
 
@@ -232,10 +232,36 @@ module raster(
 									end
 									2'b10:begin				// color
 										if (tri_idx) begin
-											
+											case (render_mode[3:2])
+												0: begin
+													rgb <= {intensity,2'b00,intensity};		// pink
+												end
+												1: begin
+													rgb <= {intensity, intensity, 2'b00};	// blue
+												end
+												2: begin
+													rgb <= {2'b00,intensity,2'b00};			// green
+												end
+												3: begin
+													rgb <= {2'b00,intensity,intensity};		// yellow
+												end
+											endcase
 										end
 										else begin
-											
+											case (render_mode[5:4])
+												0: begin
+													rgb <= {intensity,2'b00,intensity};		// pink
+												end
+												1: begin
+													rgb <= {intensity, intensity, 2'b00};	// blue
+												end
+												2: begin
+													rgb <= {2'b00,intensity,2'b00};			// green
+												end
+												3: begin
+													rgb <= {2'b00,intensity,intensity};		// yellow
+												end
+											endcase
 										end
 									end
 									default:begin
