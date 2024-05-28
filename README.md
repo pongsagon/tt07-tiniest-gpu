@@ -13,5 +13,7 @@ This project has used/modified some modules form the opensource community.
    - for the divider module. https://github.com/projf/projf-explore 
 3. Dr. Dan Gisselquist, of Zip CPU. many interesting blog post on HDL.
    - for the multiplication module.  https://github.com/ZipCPU/fwmpy
+4. Uri Shaked
+   - for the trick on image ROM and python image2ROM conversion utilites, https://github.com/TinyTapeout/tt07-dvd-screensaver
      
 I have learned a lot from your works and many super helpful people on the TinyTapout discord. Thanks you
