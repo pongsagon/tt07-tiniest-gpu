@@ -49,7 +49,7 @@ module vs(
 	input signed [15:0] vp_32,
 	input signed [15:0] vp_33,
 	// to raster
-	output reg [2:0] tri_color,					// 2-bit intensity for each tri							
+	output reg [1:0] intensity,					// 2-bit intensity for each tri							
 	output reg signed [19:0] y_screen_v0,		// change per frame, int20		
 	output reg signed [19:0] y_screen_v1,	
 	output reg signed [19:0] y_screen_v2,
@@ -113,7 +113,7 @@ module vs(
 	reg signed [19:0] x_screen_v2;
 	reg signed [19:0] x_screen_v3;
 	reg buff1_ready;
-	reg [2:0] tmp_color;
+	reg [1:0] tmp_color;
 
 
 	// used by div w
@@ -434,7 +434,7 @@ module vs(
 			e0_init_t2 <= 0;
 			e1_init_t2 <= 0;
 			e2_init_t2 <= 0;
-			tri_color <= 0;
+			intensity <= 0;
 		end
 		else begin
 
@@ -742,21 +742,21 @@ module vs(
 					if (dot_done) begin
 						if (dot_result[9] == 1'b1) begin  	   	  		// backfacing 1x.xxx
 							if (dot_result[8:6] == 3'b100) begin  		// 11.000 -> -1
-								tmp_color <= 3'b111;
+								tmp_color <= 2'b11;
 							end
 							else if (dot_result[9:8] == 2'b10) begin 	// 10.xxx -> -1.xxx
-								tmp_color <= 3'b111;
+								tmp_color <= 2'b11;
 							end
 							else begin
-								tmp_color <= ~dot_result[7:5];			// 11.xxx -> -0.xxx
+								tmp_color <= ~dot_result[7:6];			// 11.xxx -> -0.xxx
 							end
 						end
 						else begin
 							if (dot_result[8:5] == 4'b1000) begin 		// 01.000 -> 0.111
-								tmp_color <= 3'b111;
+								tmp_color <= 2'b11;
 							end
 							else begin
-								tmp_color <= dot_result[7:5];			// 0.000 - 0.111
+								tmp_color <= dot_result[7:6];			// 0.000 - 0.111
 							end
 						end
 						state_transform <= 32;
@@ -785,7 +785,7 @@ module vs(
 					y_screen_v2 <= y_screen_v2_buff1;
 					x_screen_v3 <= x_screen_v3_buff1;
 					y_screen_v3 <= y_screen_v3_buff1;
-					tri_color <= tmp_color;
+					intensity <= tmp_color;
 	    		end
 	    		else begin
 	    			x_screen_v0 <= x_screen_v0_buff2;
@@ -796,7 +796,7 @@ module vs(
 					y_screen_v2 <= y_screen_v2_buff2;
 					x_screen_v3 <= x_screen_v3_buff2;
 					y_screen_v3 <= y_screen_v3_buff2;
-					tri_color <= tmp_color;
+					intensity <= tmp_color;
 	    		end
 
 	    		// skip [VS] to test raster

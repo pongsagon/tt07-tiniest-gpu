@@ -4,6 +4,10 @@
  * Copyright (c) 2024 Matt Pongsagon Vichitvejpaisal
  * SPDX-License-Identifier: Apache-2.0
  */
+
+// Render mode
+// [7:6] 2: tt, 1: sk, 0: ddct texture
+// [5:4] tri 1 color, [3:2] tri 0 color, [1:0] render mode (uv 1, color 2, mask 0)
  
 module raster(
 	input clk, 		
@@ -12,7 +16,8 @@ module raster(
 	input [9:0] x,
 	input [9:0] y,
 	// from VS, 
-	input [2:0] tri_color,					// 3-bit, but only use 6 intensity level
+	input [1:0] intensity,					// 2-bit
+	input [7:0] render_mode,				
 	input signed [19:0] y_screen_v0,		// change per frame, int20		
 	input signed [19:0] y_screen_v1,		
 	input signed [19:0] y_screen_v2,
@@ -53,7 +58,9 @@ module raster(
 	reg [1:0] state_pixel;
 
 
-	wire texel;	
+	wire texel0;	
+	wire texel1;	
+	wire texel2;	
 	wire [6:0] u_;
 	wire [6:0] v_;
 
@@ -63,9 +70,11 @@ module raster(
 
 	//Q2.20 [0.0.999] x 128 -> Q9.13
 	assign u_ = (tri_idx)? ui2[19:13] : ui[19:13];
-	assign v_ = (tri_idx)? vi2[19:13] : vi[19:13];
+	assign v_ = (tri_idx)? vi2[19:13] : vi[19:13];		// 7'd127-, to reverse v
 
-	bitmap_rom tex(.x(u_),.y(v_),.pixel(texel)); 
+	bitmap_rom_ddct tex0(.x(u_),.y(v_),.pixel(texel0)); 
+	bitmap_rom_sk tex1(.x(u_),.y(v_),.pixel(texel1)); 
+	//bitmap_rom_tt tex2(.x(u_),.y(v_),.pixel(texel2)); 
 
 
 	always @(posedge clk) begin
@@ -107,7 +116,7 @@ module raster(
 							ui2 <= (b2_iy + bar2_iy_dx + b2_iz + bar2_iz_dx); 
 							vi2 <= (b2_iy + bar2_iy_dx); 
 							
-							// chk inside tri
+							// chk inside tri, back facing tri
 							if ((e0_t1 < 0) && (e1_t1 < 0) && (e2_t1 < 0)) begin 
 								tri_idx <= 0;
 								back_face <= 0;
@@ -138,33 +147,64 @@ module raster(
 								rgb <= 6'b01_0101;
 							end
 							else begin
-								if (tri_idx) begin
-									if (back_face) begin
-										rgb <= 6'b00_0011;
-									end
-									else begin
-										if (texel) begin
-											rgb <= 6'b00_1100;
-										end 
+								case (render_mode[1:0]) 
+									2'b00:begin				// mask
+										rgb <= 6'b01_0101;		// default to bg
+										// ddct
+										if (render_mode[7:6] == 0) begin
+											if (texel0) begin
+												if(u_ < 7'd64) begin
+													if(v_ < 7'd64) begin
+														rgb <= 6'b011111;	// yellow
+													end 
+													else begin
+														rgb <= 6'b010011;	// red
+													end 
+												end
+												else begin
+													if(v_ < 7'd64) begin
+														rgb <= 6'b101001;	// green
+													end 
+													else begin
+														rgb <= 6'b100000;	// blue
+													end
+												end
+											end
+										end
+										// sk
+										else if (render_mode[7:6] == 1) begin
+											if (texel1) begin
+												if(u_ < 7'd64) begin
+													rgb <= 6'b110111;
+												end
+												else begin
+													rgb <= 6'b111100;
+												end
+											end
+										end
+										// tt
 										else begin
-											rgb <= 6'b00_0000;
+											if (texel2) begin
+												rgb <= 6'b00_1100;
+											end
 										end
 									end
-									//rgb <= 6'b01_0101;
-								end
-								else begin
-									if (back_face) begin
-										rgb <= 6'b11_0000;
+									2'b01:begin				// uv
+										rgb <= 6'b11_1111;
+
 									end
-									else begin
-										if (texel) begin
-											rgb <= 6'b00_1100;
-										end 
+									2'b10:begin				// color
+										if (tri_idx) begin
+											
+										end
 										else begin
-											rgb <= 6'b00_0000;
+											
 										end
 									end
-								end
+									default:begin
+										rgb <= 6'b00_00000;
+									end
+								endcase
 							end
 							
 							//

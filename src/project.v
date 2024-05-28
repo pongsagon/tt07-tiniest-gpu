@@ -12,9 +12,7 @@ module tt_um_pongsagon_tiniest_gpu (
     output wire [7:0] uio_out,  // IOs: Output path
     output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
     input  wire       ena,      // always 1 when the design is powered, so you can ignore it
-    input  wire     clk,   	// clock
-    //! fgpa clk 100 Mhz
-    //input  wire       clk100,   // clock
+    input  wire       clk,      // clock
     input  wire       rst_n    // reset_n - low to reset
 );
 
@@ -23,7 +21,7 @@ module tt_um_pongsagon_tiniest_gpu (
 
 
 	// internal reg, between IA, VS
-	reg pc_data_ready;						// true for 1 clk	 
+	reg pc_data_ready;					// true for 1 clk	 
 	reg signed [15:0] x_world_v0;			// Q8.8
 	reg signed [15:0] y_world_v0;
 	reg signed [15:0] z_world_v0;
@@ -36,10 +34,10 @@ module tt_um_pongsagon_tiniest_gpu (
 	reg signed [15:0] x_world_v3;
 	reg signed [15:0] y_world_v3;
 	reg signed [15:0] z_world_v3;
-	reg signed [15:0] nx;					// Q8.8
+	reg signed [15:0] nx;					// Q2.14
 	reg signed [15:0] ny;
 	reg signed [15:0] nz;
-	reg signed [15:0] light_x;				// Q8.8
+	reg signed [15:0] light_x;			// Q2.14
 	reg signed [15:0] light_y;
 	reg signed [15:0] light_z;
 	reg signed [15:0] vp_00;				// Q8.8
@@ -54,16 +52,23 @@ module tt_um_pongsagon_tiniest_gpu (
 	reg signed [15:0] vp_31;
 	reg signed [15:0] vp_32;
 	reg signed [15:0] vp_33;
+	reg [7:0] render_mode;				// [7:6] notuse, [5:4] tri 0 color, [3:2] tri 1 color, [1:0] render mode (uv, color, mask)
 
 
 	wire rx = ui_in[3];
 	wire [7:0] read_data;
 	wire update_reg;		
 	wire pc_ready;
-	wire [5:0] idx;		// 0-59
-
+	wire [5:0] idx;		// 0-60
+	
 	ia ia1(.clk(clk),.reset(reset),.rx(rx),.read_data(read_data),
 			.idx(idx),.update_reg(update_reg),.pc_ready(pc_ready));
+
+
+	//! verilator, assign something to wire has no driver warning
+	//assign update_reg = 1'b0;
+	//assign pc_ready = 1'b0;
+	//assign idx = 6'b11_1111;
 
 
 	// update internal reg from IA
@@ -100,6 +105,7 @@ module tt_um_pongsagon_tiniest_gpu (
 			vp_31 <= 0;
 			vp_32 <= 0;
 			vp_33 <= 0;
+			render_mode <= 0;
 		end
 		else begin
 			if (update_reg) begin
@@ -284,6 +290,9 @@ module tt_um_pongsagon_tiniest_gpu (
 					59: begin
 						z_world_v3[15:8] <= read_data;	
 					end	
+					60: begin
+						render_mode <= read_data;	
+					end	
 					default: begin
 						
 					end
@@ -291,12 +300,13 @@ module tt_um_pongsagon_tiniest_gpu (
 			end
 		end
 
+		//! comment out for verilator
 		pc_data_ready <= pc_ready;
 	end
 
 	
 	wire [5:0] rgb;
-	wire [2:0] tri_color;
+	wire [1:0] intensity;
 	wire signed [19:0] y_screen_v0;		
 	wire signed [19:0] y_screen_v1;	
 	wire signed [19:0] y_screen_v2;
@@ -325,14 +335,14 @@ module tt_um_pongsagon_tiniest_gpu (
 					.light_x(light_x),.light_y(light_y),.light_z(light_z),
 					.vp_00(vp_00),.vp_01(vp_01),.vp_02(vp_02),.vp_03(vp_03),
 					.vp_10(vp_10),.vp_11(vp_11),.vp_12(vp_12),.vp_13(vp_13),
-					.vp_30(vp_30),.vp_31(vp_31),.vp_32(vp_32),.vp_33(vp_33),.tri_color(tri_color),
+					.vp_30(vp_30),.vp_31(vp_31),.vp_32(vp_32),.vp_33(vp_33),.intensity(intensity),
 					.y_screen_v0(y_screen_v0),.y_screen_v1(y_screen_v1),.y_screen_v2(y_screen_v2),.y_screen_v3(y_screen_v3),
 					.e0_init_t1(e0_init_t1),.e1_init_t1(e1_init_t1),.e2_init_t1(e2_init_t1),
 					.e0_init_t2(e0_init_t2),.e1_init_t2(e1_init_t2),.e2_init_t2(e2_init_t2),
 					.bar_iy(bar_iy),.bar_iy_dx(bar_iy_dx),.bar_iz(bar_iz),.bar_iz_dx(bar_iz_dx),
 					.bar2_iy(bar2_iy),.bar2_iy_dx(bar2_iy_dx),.bar2_iz(bar2_iz),.bar2_iz_dx(bar2_iz_dx));
 
-	raster raster1(.clk(clk),.reset(reset),.x(x),.y(y),.tri_color(tri_color),
+	raster raster1(.clk(clk),.reset(reset),.x(x),.y(y),.intensity(intensity),.render_mode(render_mode),
 					.y_screen_v0(y_screen_v0),.y_screen_v1(y_screen_v1),.y_screen_v2(y_screen_v2),.y_screen_v3(y_screen_v3),
 					.e0_init_t1(e0_init_t1),.e1_init_t1(e1_init_t1),.e2_init_t1(e2_init_t1),
 					.e0_init_t2(e0_init_t2),.e1_init_t2(e1_init_t2),.e2_init_t2(e2_init_t2),
@@ -367,23 +377,68 @@ module tt_um_pongsagon_tiniest_gpu (
 
 
 
+	//////////////////////////////
+	//! verilator
+	//////////////////////////////
+
+	// always @(posedge clk) begin
+	// 	pc_data_ready <= SIM_pc_data_ready;				
+	// 	x_world_v0 <= SIM_x_world_v0;	
+	// 	y_world_v0 <= SIM_y_world_v0;
+	// 	z_world_v0 <= SIM_z_world_v0;
+	// 	x_world_v1 <= SIM_x_world_v1;
+	// 	y_world_v1 <= SIM_y_world_v1;
+	// 	z_world_v1 <= SIM_z_world_v1;
+	// 	x_world_v2 <= SIM_x_world_v2;
+	// 	y_world_v2 <= SIM_y_world_v2;
+	// 	z_world_v2 <= SIM_z_world_v2;
+	// 	x_world_v3 <= SIM_x_world_v3;
+	// 	y_world_v3 <= SIM_y_world_v3;
+	// 	z_world_v3 <= SIM_z_world_v3;
+	// 	nx <= SIM_nx;					
+	// 	ny <= SIM_ny;
+	// 	nz <= SIM_nz;
+	// 	light_x <= SIM_light_x;			
+	// 	light_y <= SIM_light_y;
+	// 	light_z <= SIM_light_z;
+	// 	vp_00 <= SIM_vp_00;				
+	// 	vp_01 <= SIM_vp_01;
+	// 	vp_02 <= SIM_vp_02;
+	// 	vp_03 <= SIM_vp_03;
+	// 	vp_10 <= SIM_vp_10;				
+	// 	vp_11 <= SIM_vp_11;
+	// 	vp_12 <= SIM_vp_12;
+	// 	vp_13 <= SIM_vp_13;
+	// 	vp_30 <= SIM_vp_30;				
+	// 	vp_31 <= SIM_vp_31;
+	// 	vp_32 <= SIM_vp_32;
+	// 	vp_33 <= SIM_vp_33;
+	// 	render_mode <= SIM_render_mode;
+	// 	SIM_sx <= x;
+    //     SIM_sy <= y;
+    //     SIM_de <= ~blank;
+    //     SIM_r <= {4{RGB[1:0]}};
+    //     SIM_g <= {4{RGB[3:2]}};
+    //     SIM_b <= {4{RGB[5:4]}};
+	// end
+
 
 	//////////////////////////////
 	// fpga code to reduce clk from 100Mhz to 50Mhz
 	//! commment this block in ASIC, verilator
 	//////////////////////////////
 	
-	 // reg[27:0] counter=28'd0;
-	 // parameter DIVISOR = 28'd2;
-	 // reg clk;
-	 // always @(posedge clk100)
-	 // begin
-	 	// counter <= counter + 28'd1;
-	 	// if(counter>=(DIVISOR-1))
-	 		// counter <= 28'd0;
+	/*reg[27:0] counter=28'd0;
+	parameter DIVISOR = 28'd2;
+	reg clk;
+	always @(posedge clk100)
+	begin
+		counter <= counter + 28'd1;
+		if(counter>=(DIVISOR-1))
+			counter <= 28'd0;
 
-	 	// clk <= (counter<DIVISOR/2)?1'b1:1'b0;
-	 // end
+		clk <= (counter<DIVISOR/2)?1'b1:1'b0;
+	end*/
 
 
 endmodule
