@@ -26,7 +26,8 @@ project:
     - "raster.v"
     - "dot4.v"
     - "ia.v"
-    - "bitmap_rom.v"
+    - "bitmap_rom_ddct.v"
+    - "bitmap_rom_sk.v"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:
