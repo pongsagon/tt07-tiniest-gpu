@@ -74,7 +74,7 @@ module raster(
 
 	bitmap_rom_ddct tex0(.x(u_),.y(v_),.pixel(texel0)); 
 	bitmap_rom_sk tex1(.x(u_),.y(v_),.pixel(texel1)); 
-	//bitmap_rom_tt tex2(.x(u_),.y(v_),.pixel(texel2)); 
+	bitmap_rom_tt tex2(.x(u_),.y(v_),.pixel(texel2)); 
 
 
 	always @(posedge clk) begin
@@ -184,14 +184,51 @@ module raster(
 										end
 										// tt
 										else begin
-											//if (texel2) begin
+											if (texel2) begin
 												rgb <= 6'b00_1100;
-											//end
+											end
 										end
 									end
 									2'b01:begin				// uv
 										rgb <= 6'b11_1111;
-
+										// ddct
+										if (render_mode[7:6] == 0) begin
+											if (texel0) begin
+												if(u_ < 7'd64) begin
+													if(v_ < 7'd64) begin
+														rgb <= 6'b011111;	// yellow
+													end 
+													else begin
+														rgb <= 6'b010011;	// red
+													end 
+												end
+												else begin
+													if(v_ < 7'd64) begin
+														rgb <= 6'b101001;	// green
+													end 
+													else begin
+														rgb <= 6'b100000;	// blue
+													end
+												end
+											end
+										end
+										// sk
+										else if (render_mode[7:6] == 1) begin
+											if (texel1) begin
+												if(u_ < 7'd64) begin
+													rgb <= 6'b110111;
+												end
+												else begin
+													rgb <= 6'b111100;
+												end
+											end
+										end
+										// tt
+										else begin
+											if (texel2) begin
+												rgb <= 6'b00_1100;
+											end
+										end
 									end
 									2'b10:begin				// color
 										if (tri_idx) begin
