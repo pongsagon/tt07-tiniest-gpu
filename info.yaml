@@ -28,7 +28,6 @@ project:
     - "ia.v"
     - "bitmap_rom_ddct.v"
     - "bitmap_rom_sk.v"
-    - "bitmap_rom_tt.v"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:
