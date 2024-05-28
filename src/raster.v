@@ -184,9 +184,9 @@ module raster(
 										end
 										// tt
 										else begin
-											if (texel2) begin
+											//if (texel2) begin
 												rgb <= 6'b00_1100;
-											end
+											//end
 										end
 									end
 									2'b01:begin				// uv
