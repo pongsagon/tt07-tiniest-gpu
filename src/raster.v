@@ -60,7 +60,7 @@ module raster(
 
 	wire texel0;	
 	wire texel1;	
-	wire texel2;	
+	//wire texel2;	
 	wire [6:0] u_;
 	wire [6:0] v_;
 
@@ -184,9 +184,9 @@ module raster(
 										end
 										// tt
 										else begin
-											// if (texel2) begin
-											// 	rgb <= 6'b00_1100;
-											// end
+//											 if (texel2) begin
+//											 	rgb <= 6'b00_1100;
+//											 end
 										end
 									end
 									2'b01:begin				// uv
@@ -225,9 +225,9 @@ module raster(
 										end
 										// tt
 										else begin
-											// if (texel2) begin
-											// 	rgb <= 6'b00_1100;
-											// end
+//											 if (texel2) begin
+//											 	rgb <= 6'b00_1100;
+//											 end
 										end
 									end
 									2'b10:begin				// color

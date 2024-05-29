@@ -59,7 +59,7 @@ module tt_um_pongsagon_tiniest_gpu (
 	wire [7:0] read_data;
 	wire update_reg;		
 	wire pc_ready;
-	wire [5:0] idx;		// 0-60
+	wire [6:0] idx;		// 0-60
 	
 	ia ia1(.clk(clk),.reset(reset),.rx(rx),.read_data(read_data),
 			.idx(idx),.update_reg(update_reg),.pc_ready(pc_ready));
@@ -285,13 +285,17 @@ module tt_um_pongsagon_tiniest_gpu (
 						y_world_v3[15:8] <= read_data;		
 					end
 					58: begin
-						z_world_v3[7:0] <= read_data;		
+						z_world_v3[7:0] <= read_data;	
+						z_world_v3[15:8] <= 8'b0000_0000;	// v3.z hi must be 0, no room to send 61st byte
 					end
 					59: begin
-						z_world_v3[15:8] <= read_data;	
-					end	
-					60: begin
+						//z_world_v3[15:8] <= read_data;	
 						render_mode <= read_data;	
+					end	
+					// cant send 61 bytes, dont know why, may be too much for UART @115200, data is weirdly corrupted
+					// 60 bytes still work, 
+					60: begin
+						//render_mode <= 8'b0100_0000;//read_data;	
 					end	
 					default: begin
 						
