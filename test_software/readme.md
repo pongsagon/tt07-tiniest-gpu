@@ -1,14 +1,16 @@
 # Overview
 
 ASIC GPU testing app written in C run on Windows. \
-To be able to run on different OS, you may need to use different UART library.
-The app will send these data each frame @11520 baud rate to the GPU
+To be able to run on different OS, you may need to use different UART library. \
+The app will send these data, 60 bytes, each frame @11520 baud rate to the GPU
 - 4 vertices world coordinate
 - 1 normal
 - 1 light direction
 - 4x4 ModelViewProjection matrix
 - 1 byte render mode
   - solid shading, texture, alpha masked
+    
+The code has been successfully tested with the Basys3 board, sending data at 60fps.
 
 # How to use
 1. The code rely on SFML library for the input and windows. https://www.sfml-dev.org/tutorials/2.6/start-vc.php. \
