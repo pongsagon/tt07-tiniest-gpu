@@ -4,6 +4,13 @@
 
 - updating
 
+## Folders
+
+1. src: ASIC Verilog version
+2. Basys3: Verilog version targeted Basys3 FPGA board
+3. Verilator_sim: Verilog simulation version using Verilator and SDL
+4. test_software: PC app used to sending data to the GPU
+
 ## Acknowledgment
 
 This project has used/modified some modules form the opensource community. 
