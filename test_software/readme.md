@@ -16,7 +16,8 @@ The code has been successfully tested with the Basys3 board, sending data at 60f
 # How to use
 1. The code rely on SFML library for the input and windows. https://www.sfml-dev.org/tutorials/2.6/start-vc.php. \
    Please install SFML first.
-2. short cut keys
+2. Change the COM port number in C code to match with the ASIC/FPGA port
+3. short cut keys
    - arrow key: yaw pitch
    - as: zoom
    - df: change model size
