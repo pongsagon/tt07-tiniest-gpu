@@ -9,7 +9,7 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-A tiniest GPU that can render only 1 triangle
+A tiniest GPU that can render two triangle
 
 ## How to test
 
