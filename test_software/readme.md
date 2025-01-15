@@ -16,7 +16,7 @@ The code has been successfully tested with the Basys3 board, sending data at 60f
 # How to use
 1. The code rely on SFML library for the input and windows. https://www.sfml-dev.org/tutorials/2.6/start-vc.php. \
    Please install SFML first.
-2. Change the COM port number in C code to match with the ASIC/FPGA port
+2. Change the COM port number in C code to match with the ASIC/FPGA port (line number 330)
 3. short cut keys
    - arrow key: yaw pitch
    - as: zoom
@@ -26,4 +26,4 @@ The code has been successfully tested with the Basys3 board, sending data at 60f
    - 34: change texture
    - 6789: change triangle 1 color
    - uiop: change triangle 2 color
-
+4. You can also changes the vertices coordinate, quad normal and light direction using code.  I have not write short cut keys for setting them.
