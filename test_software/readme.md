@@ -1,7 +1,8 @@
 # Overview
 
-ASIC GPU testing app written in C run on Windows. \
-To be able to run on different OS, you may need to use different UART library. \
+ASIC GPU testing app written in python run through REPL. \
+https://tinytapeout.com/guides/get-started-demoboard/#accessing-the-repl \
+You can just copy and paste the code in REPL \
 The app will send these data, 60 bytes, each frame @11520 baud rate to the GPU
 - 4 vertices world coordinate that form a quad
 - 1 normalize normal
@@ -11,19 +12,13 @@ The app will send these data, 60 bytes, each frame @11520 baud rate to the GPU
   - solid shading, texture, alpha masked
 
 The data are in the format of fixed point Q8.8 except for the 1-byte render mode. \
-The code has been successfully tested with the Basys3 board, sending data at 60fps.
+The code has been successfully tested on the tt07 ASIC, sending data at 60fps.
 
+# Data corruption issue 
+- Sometime data sending from PC to the demoboard's USB can be corrupted. Reconnect the board or change the PC's USB port or change the USB cable would help
+
+   
 # How to use
-1. The code rely on SFML library for the input and windows. https://www.sfml-dev.org/tutorials/2.6/start-vc.php. \
-   Please install SFML first.
-2. Change the COM port number in C code to match with the ASIC/FPGA port (line number 330)
-3. short cut keys
-   - arrow key: yaw pitch
-   - as: zoom
-   - df: change model size
-   - er: X translation
-   - 012: render mode
-   - 34: change texture
-   - 6789: change triangle 1 color
-   - uiop: change triangle 2 color
-4. You can also changes the vertices coordinate, quad normal and light direction using code.  I have not write short cut keys for setting them.
+   - wsad: yaw, pitch
+   - 123: render mode, change texture
+   - You can modify the python code to changes the vertices coordinate, quad normal and light direction using code.  I have not write short cut keys for setting them.
