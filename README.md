@@ -10,7 +10,7 @@
 - The chip comes with two texture ROM images. (My schools' logo)
 - The transformation, lighting and rasterization are done in the GPU.
 - It support solid shading with one directional light source and affine texture mapping.
-- All 3D data (coordinates, transformation, render mode) are sent each frame to the ASIC.
+- All 3D data (vertices, transformation, render mode) are sent each frame to the ASIC.
 - The output is sent to the VGA monitor using TinyVGA.  The output resolution is 640x480 pixels, 6-bit RGB running at 60 fps.
 - The clock fequency is 50 Mhz.
 
