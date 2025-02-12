@@ -6,6 +6,7 @@
 ## What is it
 
 - This is a tiniest ASIC GPU.  It can render a quad using two triangles with texture mapped.
+- The design uses around 16,000 gates/cells and around 200 bytes of flipflop for all of the storage that required in the graphics pipeline.  This max out 16-tile on the tinytapeout.
 - The chip comes with two texture ROM images. (My schools' logo)
 - The transformation, lighting and rasterization are done in the GPU.
 - It support solid shading with one directional light source and affine texture mapping.
