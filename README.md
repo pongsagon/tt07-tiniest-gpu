@@ -43,7 +43,7 @@
    -  Each pixel color has to be computed in 2 clock cycles.
    -  the rasterization is running in parallel with the vertex stage.
    -  Using incremental edge function to do pixel-triangle inside test.
-- Computation steps
+- Computation steps (all of these steps are running in a pipeline)
    1. read data from the PC via UART (in project.v, ia.v)
    2. for each frame (in vs.v)
       - transform vertices to screen space and compute lighting
