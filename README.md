@@ -1,7 +1,6 @@
 ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
 
 ![](https://github.com/pongsagon/tt07-tiniest-gpu/blob/main/test_software/tt-ezgif.com-crop.gif)
-![](https://github.com/pongsagon/tt07-tiniest-gpu/blob/main/test_software/pic.jpg)
 
 ## What is it
 
