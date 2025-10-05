@@ -1001,23 +1001,23 @@ module vs(
 					end 
 					//
 					// 2. compute denom
-					//		Q20.0 denom_i = (pts[0].y-pts[2].y) * (pts[1].x-pts[2].x) + (pts[1].y-pts[2].y) * (pts[2].x-pts[0].x)
+					//		Q20.0 denom_i = (y1-y2)(x0-x2)+(x2-x1)(y0-y2)
 					//		Q2.20 denom = float2fix14(1.0f/denom_i);
 					//		640x640 x2 = 819,200      2^20
     				//      1/819,200 = 0.00000122,   1/2^20   
 					// 012 -> 023
 					19: begin
-						mul_a <= {y_screen_v0 - y_screen_v2,2'b00};			// pts[0].y-pts[2].y
-						mul_b <= {x_screen_v1 - x_screen_v2,2'b00};			// pts[1].x-pts[2].x
+						mul_a <= {y_screen_v1 - y_screen_v2,2'b00};			
+						mul_b <= {x_screen_v0 - x_screen_v2,2'b00};			
 						mul_start <= 1;
 						state_ei_frame <= 20;
 					end
 					20: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							tmp_ei_mul1 <= mul_result[23:4];		// ready in 23clk for 20bit mul
-							mul_a <= {y_screen_v1 - y_screen_v2,2'b00};		// pts[1].y-pts[2].y
-							mul_b <= {x_screen_v2 - x_screen_v0,2'b00};		// pts[2].x-pts[0].x
+							tmp_ei_mul1 <= mul_result[23:4];		
+							mul_a <= {y_screen_v0 - y_screen_v2,2'b00};		
+							mul_b <= {x_screen_v2 - x_screen_v1,2'b00};		
 							mul_start <= 1;
 							state_ei_frame <= 21;
 						end
@@ -1044,19 +1044,21 @@ module vs(
 							state_ei_frame <= 24;
 						end
 					end
-					//
+					// (y1-y2)(x0-x2)+(x2-x1)(y0-y2)
+					// 012 -> 023
+					// (y2-y3)(x0-x3)+(x3-x2)(y0-y3)
 					24: begin
-						mul_a <= {y_screen_v0 - y_screen_v3,2'b00};			// pts[0].y-pts[2].y
-						mul_b <= {x_screen_v2 - x_screen_v3,2'b00};			// pts[1].x-pts[2].x
+						mul_a <= {y_screen_v2 - y_screen_v3,2'b00};			
+						mul_b <= {x_screen_v0 - x_screen_v3,2'b00};			
 						mul_start <= 1;
 						state_ei_frame <= 25;
 					end
 					25: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							tmp_ei_mul1 <= mul_result[23:4];		// ready in 23clk for 20bit mul
-							mul_a <= {y_screen_v2 - y_screen_v3,2'b00};		// pts[1].y-pts[2].y
-							mul_b <= {x_screen_v3 - x_screen_v0,2'b00};		// pts[2].x-pts[0].x
+							tmp_ei_mul1 <= mul_result[23:4];		
+							mul_a <= {y_screen_v0 - y_screen_v3,2'b00};		
+							mul_b <= {x_screen_v3 - x_screen_v2,2'b00};		
 							mul_start <= 1;
 							state_ei_frame <= 26;
 						end
@@ -1091,25 +1093,25 @@ module vs(
 					//	Q2.20 = 500 * 0.000002 = 0.001, 2^10
 					//		  = 100 * 0.000002 = 0.0002, 2^16 = 0.000015
 					//		
-					//		 bar_iy <= ((pts[0].y * x1x3) + (-y1y3 * pts[0].x)) * denom;	// 3 mul
-				    //		 bar_iy_dy <= -x1x3 * denom;		// 1 mul
-					//		 bar_iy_dx <= y1y3 * denom;		// 1 mul
-					//		 bar_iz <= ((pts[1].y * x2x1) + (y1y2 * pts[1].x)) * denom;	// 3 mul
-					//		 bar_iz_dy <= -x2x1 * denom;		// 1 mul
-					//		 bar_iz_dx <= -y1y2 * denom;		// 1 mul
+					//		 bar_iy <= {(y2-y0)(0-x2)+(x0-x2)(0-y2)} * denom;	// 3 mul
+				    //		 bar_iy_dy <= x0x2 * denom;		// 1 mul
+					//		 bar_iy_dx <= y2y0 * denom;		// 1 mul
+					//		 bar_iz <= {(y0-y1)(0-x2)+(x1-x0)(0-y2)} * denom;	// 3 mul
+					//		 bar_iz_dy <= x1x0 * denom;		// 1 mul
+					//		 bar_iz_dx <= y0y1 * denom;		// 1 mul
 					// 012 -> 023
 					29: begin
-						mul_a <= {y_screen_v0,2'b00};						// pts[0].y
-						mul_b <= {x_screen_v0 - x_screen_v2,2'b00};			// x1x3, pts[0].x-pts[2].x
+						mul_a <= {y_screen_v2 - y_screen_v0,2'b00};						
+						mul_b <= {20'b0000_0000_0000_0000_0000 - x_screen_v2,2'b00};			
 						mul_start <= 1;
 						state_ei_frame <= 30;
 					end
 					30: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							tmp_ei_mul1 <= mul_result[23:4];		// ready in 23clk for 20bit mul
-							mul_a <= {y_screen_v2 - y_screen_v0,2'b00};		// -y1y3, pts[2].y - pts[0].y
-							mul_b <= {x_screen_v0,2'b00};					// pts[0].x
+							tmp_ei_mul1 <= mul_result[23:4];						// ready in 23clk for 20bit mul
+							mul_a <= {x_screen_v0 - x_screen_v2,2'b00};		
+							mul_b <= {20'b0000_0000_0000_0000_0000 - y_screen_v2,2'b00};					
 							mul_start <= 1;
 							state_ei_frame <= 31;
 						end
@@ -1126,9 +1128,9 @@ module vs(
 					32: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							bar_iy <= mul_result[23:2];				// ready in 23clk for 20bit mul
+							bar_iy <= mul_result[23:2];								// ready in 23clk for 20bit mul
 							//
-							mul_a <= {x_screen_v2 - x_screen_v0,2'b00};		// -x1x3, pts[2].x - pts[0].x
+							mul_a <= {x_screen_v0 - x_screen_v2,2'b00};		
 							mul_b <= denom;					
 							mul_start <= 1;
 							state_ei_frame <= 33;
@@ -1137,9 +1139,9 @@ module vs(
 					33: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							bar_iy_dy <= mul_result[23:2];				// ready in 23clk for 20bit mul
+							bar_iy_dy <= mul_result[23:2];							// ready in 23clk for 20bit mul
 							//
-							mul_a <= {y_screen_v0 - y_screen_v2,2'b00};			// y1y3, pts[0].y - pts[2].y
+							mul_a <= {y_screen_v2 - y_screen_v0,2'b00};			
 							mul_b <= denom;					
 							mul_start <= 1;
 							state_ei_frame <= 34;
@@ -1148,10 +1150,10 @@ module vs(
 					34: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							bar_iy_dx <= mul_result[23:2];				// ready in 23clk for 20bit mul
+							bar_iy_dx <= mul_result[23:2];							// ready in 23clk for 20bit mul
 							//
-							mul_a <= {y_screen_v1,2'b00};						// pts[1].y
-							mul_b <= {x_screen_v1 - x_screen_v0,2'b00};			// x2x1		
+							mul_a <= {y_screen_v0 - y_screen_v1,2'b00};						
+							mul_b <= {20'b0000_0000_0000_0000_0000 - x_screen_v2,2'b00};				
 							mul_start <= 1;
 							state_ei_frame <= 35;
 						end
@@ -1159,9 +1161,9 @@ module vs(
 					35: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							tmp_ei_mul1 <= mul_result[23:4];		// ready in 23clk for 20bit mul
-							mul_a <= {y_screen_v0 - y_screen_v1,2'b00};		// y1y2, pts[0].y - pts[1].y
-							mul_b <= {x_screen_v1,2'b00};					// pts[1].x
+							tmp_ei_mul1 <= mul_result[23:4];						// ready in 23clk for 20bit mul
+							mul_a <= {x_screen_v1 - x_screen_v0,2'b00};		
+							mul_b <= {20'b0000_0000_0000_0000_0000 - y_screen_v2,2'b00};					
 							mul_start <= 1;
 							state_ei_frame <= 36;
 						end
@@ -1178,9 +1180,9 @@ module vs(
 					37: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							bar_iz <= mul_result[23:2];				// ready in 23clk for 20bit mul
+							bar_iz <= mul_result[23:2];								// ready in 23clk for 20bit mul
 							//
-							mul_a <= {x_screen_v0 - x_screen_v1,2'b00};		// -x2x1, pts[0].x - pts[1].x
+							mul_a <= {x_screen_v1 - x_screen_v0,2'b00};		
 							mul_b <= denom;					
 							mul_start <= 1;
 							state_ei_frame <= 38;
@@ -1189,9 +1191,9 @@ module vs(
 					38: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							bar_iz_dy <= mul_result[23:2];				// ready in 23clk for 20bit mul
+							bar_iz_dy <= mul_result[23:2];							// ready in 23clk for 20bit mul
 							//
-							mul_a <= {y_screen_v1 - y_screen_v0,2'b00};			// -y1y2, pts[1].y - pts[0].y
+							mul_a <= {y_screen_v0 - y_screen_v1,2'b00};			
 							mul_b <= denom;					
 							mul_start <= 1;
 							state_ei_frame <= 39;
@@ -1200,24 +1202,36 @@ module vs(
 					39: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							bar_iz_dx <= mul_result[23:2];				// ready in 23clk for 20bit mul
+							bar_iz_dx <= mul_result[23:2];							// ready in 23clk for 20bit mul
 							//
 							state_ei_frame <= 40;
 						end
 					end
-					//
+					//		 bar_iy <= {(y2-y0)(0-x2)+(x0-x2)(0-y2)} * denom;	// 3 mul
+				    //		 bar_iy_dy <= x0x2 * denom;		// 1 mul
+					//		 bar_iy_dx <= y2y0 * denom;		// 1 mul
+					//		 bar_iz <= {(y0-y1)(0-x2)+(x1-x0)(0-y2)} * denom;	// 3 mul
+					//		 bar_iz_dy <= x1x0 * denom;		// 1 mul
+					//		 bar_iz_dx <= y0y1 * denom;		// 1 mul
+					// 012 -> 023
+					//		 bar_iy <= {(y3-y0)(0-x3)+(x0-x3)(0-y3)} * denom;	// 3 mul
+				    //		 bar_iy_dy <= x0x3 * denom;		// 1 mul
+					//		 bar_iy_dx <= y3y0 * denom;		// 1 mul
+					//		 bar_iz <= {(y0-y2)(0-x3)+(x2-x0)(0-y3)} * denom;	// 3 mul
+					//		 bar_iz_dy <= x2x0 * denom;		// 1 mul
+					//		 bar_iz_dx <= y0y2 * denom;		// 1 mul
 					40: begin
-						mul_a <= {y_screen_v0,2'b00};						// pts[0].y
-						mul_b <= {x_screen_v0 - x_screen_v3,2'b00};			// x1x3, pts[0].x-pts[2].x
+						mul_a <= {y_screen_v3 - y_screen_v0,2'b00};						
+						mul_b <= {20'b0000_0000_0000_0000_0000 - x_screen_v3,2'b00};			
 						mul_start <= 1;
 						state_ei_frame <= 41;
 					end
 					41: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							tmp_ei_mul1 <= mul_result[23:4];		// ready in 23clk for 20bit mul
-							mul_a <= {y_screen_v3 - y_screen_v0,2'b00};		// -y1y3, pts[2].y - pts[0].y
-							mul_b <= {x_screen_v0,2'b00};					// pts[0].x
+							tmp_ei_mul1 <= mul_result[23:4];						// ready in 23clk for 20bit mul
+							mul_a <= {x_screen_v0 - x_screen_v3,2'b00};		
+							mul_b <= {20'b0000_0000_0000_0000_0000 - y_screen_v3,2'b00};					
 							mul_start <= 1;
 							state_ei_frame <= 42;
 						end
@@ -1234,9 +1248,9 @@ module vs(
 					43: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							bar2_iy <= mul_result[23:2];				// ready in 23clk for 20bit mul
+							bar2_iy <= mul_result[23:2];							// ready in 23clk for 20bit mul
 							//
-							mul_a <= {x_screen_v3 - x_screen_v0,2'b00};		// -x1x3, pts[2].x - pts[0].x
+							mul_a <= {x_screen_v0 - x_screen_v3,2'b00};		
 							mul_b <= denom2;					
 							mul_start <= 1;
 							state_ei_frame <= 44;
@@ -1245,9 +1259,9 @@ module vs(
 					44: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							bar2_iy_dy <= mul_result[23:2];				// ready in 23clk for 20bit mul
+							bar2_iy_dy <= mul_result[23:2];							// ready in 23clk for 20bit mul
 							//
-							mul_a <= {y_screen_v0 - y_screen_v3,2'b00};			// y1y3, pts[0].y - pts[2].y
+							mul_a <= {y_screen_v3 - y_screen_v0,2'b00};			
 							mul_b <= denom2;					
 							mul_start <= 1;
 							state_ei_frame <= 45;
@@ -1256,10 +1270,10 @@ module vs(
 					45: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							bar2_iy_dx <= mul_result[23:2];				// ready in 23clk for 20bit mul
+							bar2_iy_dx <= mul_result[23:2];							// ready in 23clk for 20bit mul
 							//
-							mul_a <= {y_screen_v2,2'b00};						// pts[1].y
-							mul_b <= {x_screen_v2 - x_screen_v0,2'b00};			// x2x1		
+							mul_a <= {y_screen_v0 - y_screen_v2,2'b00};						
+							mul_b <= {20'b0000_0000_0000_0000_0000 - x_screen_v3,2'b00};			
 							mul_start <= 1;
 							state_ei_frame <= 46;
 						end
@@ -1267,9 +1281,9 @@ module vs(
 					46: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							tmp_ei_mul1 <= mul_result[23:4];		// ready in 23clk for 20bit mul
-							mul_a <= {y_screen_v0 - y_screen_v2,2'b00};		// y1y2, pts[0].y - pts[1].y
-							mul_b <= {x_screen_v2,2'b00};					// pts[1].x
+							tmp_ei_mul1 <= mul_result[23:4];						// ready in 23clk for 20bit mul
+							mul_a <= {x_screen_v2 - x_screen_v0,2'b00};		
+							mul_b <= {20'b0000_0000_0000_0000_0000 - y_screen_v3,2'b00};					
 							mul_start <= 1;
 							state_ei_frame <= 47;
 						end
@@ -1286,9 +1300,9 @@ module vs(
 					48: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							bar2_iz <= mul_result[23:2];				// ready in 23clk for 20bit mul
+							bar2_iz <= mul_result[23:2];							// ready in 23clk for 20bit mul
 							//
-							mul_a <= {x_screen_v0 - x_screen_v2,2'b00};		// -x2x1, pts[0].x - pts[1].x
+							mul_a <= {x_screen_v2 - x_screen_v0,2'b00};		
 							mul_b <= denom2;					
 							mul_start <= 1;
 							state_ei_frame <= 49;
@@ -1297,9 +1311,9 @@ module vs(
 					49: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							bar2_iz_dy <= mul_result[23:2];				// ready in 23clk for 20bit mul
+							bar2_iz_dy <= mul_result[23:2];							// ready in 23clk for 20bit mul
 							//
-							mul_a <= {y_screen_v2 - y_screen_v0,2'b00};			// -y1y2, pts[1].y - pts[0].y
+							mul_a <= {y_screen_v0 - y_screen_v2,2'b00};			
 							mul_b <= denom2;					
 							mul_start <= 1;
 							state_ei_frame <= 50;
@@ -1308,7 +1322,7 @@ module vs(
 					50: begin
 						mul_start <= 0;
 						if (mul_done) begin
-							bar2_iz_dx <= mul_result[23:2];				// ready in 23clk for 20bit mul
+							bar2_iz_dx <= mul_result[23:2];							// ready in 23clk for 20bit mul
 							//
 							state_ei_frame <= 0;
 						end
