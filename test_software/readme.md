@@ -15,7 +15,7 @@ The data are in the format of fixed point Q8.8 except for the 1-byte render mode
 The code has been successfully tested on the tt07 ASIC, sending data at 60fps.
 
 # Data corruption issue 
-- Sometime data sending from PC to the demoboard's USB can be corrupted. Reconnect the board or change the PC's USB port or change the USB cable would help
+- Sometime data sending from PC to the demoboard's USB can be corrupted. This is because this project uses 50Mhz clk speed, which is too fast for the ASIC I/O connections.  Another reason might be that the timing for the UART's baud rate is not exact and the timing error accumulation can occur.   I did not know this limitation before when designing the TinyTapeout ASIC.  Reconnect the board or change the PC's USB port or change the USB cable or try it again and agian would help.
 
    
 # How to use
